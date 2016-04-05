@@ -32,7 +32,7 @@ public class FLPullUpViewController: UIViewController {
     private var darkScreenView = DarkScreenView()
     private var containerView = UIView()
     private let blurEffectView = UIVisualEffectView(effect: UIBlurEffect(style: .ExtraLight))
-
+    
     private var originalPullDistance: CGFloat = 0
     private var containerPullAnimation: NSTimeInterval = 0.3
     private var navBarHeight: CGFloat = 0
@@ -47,7 +47,7 @@ public class FLPullUpViewController: UIViewController {
             view.setNeedsLayout()
         }
     }
-
+    
     public init(){
         super.init(nibName: nil, bundle: nil)
     }
@@ -67,19 +67,19 @@ public class FLPullUpViewController: UIViewController {
         
         modalPresentationStyle = UIModalPresentationStyle.OverCurrentContext
     }
-
+    
     required public init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
     }
-
+    
     // MARK: Life Cycle
-    override func viewDidLoad() {
+    override public func viewDidLoad() {
         super.viewDidLoad()
         
         defaultConfiguration()
     }
     
-    override func viewDidAppear(animated: Bool) {
+    override public func viewDidAppear(animated: Bool) {
         super.viewDidAppear(animated)
         
         UIView.animateWithDuration(0.3) { () -> Void in
@@ -88,7 +88,7 @@ public class FLPullUpViewController: UIViewController {
         }
     }
     
-    override func viewDidLayoutSubviews() {
+    override public func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         
         var containerX: CGFloat = 0
@@ -107,7 +107,7 @@ public class FLPullUpViewController: UIViewController {
         }
         
         self.rootViewController.view.frame.size = CGSizeMake(containerWidth, view.bounds.height)
-
+        
         UIView.animateWithDuration(0.3, animations: { () -> Void in
             self.containerView.frame = CGRectMake(
                 containerX,
@@ -117,13 +117,41 @@ public class FLPullUpViewController: UIViewController {
             
             self.darkScreenView.updateFrame()
             
-            }) { (complete) -> Void in
-                self.blurEffectView.frame = self.containerView.bounds
-                self.rootViewController.view.frame.size = CGSizeMake(self.containerView.bounds.width, self.pullUpDistance)
-                self.darkScreenView.backgroundColor = UIColor.clearColor()
-                
+        }) { (complete) -> Void in
+            self.blurEffectView.frame = self.containerView.bounds
+            self.rootViewController.view.frame.size = CGSizeMake(self.containerView.bounds.width, self.pullUpDistance)
+            self.darkScreenView.backgroundColor = UIColor.clearColor()
         }
+    }
+    
+    // MARK: Button action
+    override public func dismissViewControllerAnimated(flag: Bool, completion: (() -> Void)?) {
         
+        pullUpDistance = 0
+        
+        UIView.animateWithDuration(0.3, animations: {[weak self] () -> Void in
+            
+            self?.darkScreenView.hide = true
+            
+        }) { (complete) -> Void in
+            if (complete){
+                if let delegate = self.delegate{
+                    delegate.pullUpVC!(self, didCloseWith: self.rootViewController)
+                }
+                
+                if let vc = self.rootViewController{
+                    vc.view.removeFromSuperview()
+                }
+                
+                super.dismissViewControllerAnimated(false, completion: completion)
+            }
+        }
+    }
+    
+    override public func viewWillTransitionToSize(size: CGSize, withTransitionCoordinator coordinator: UIViewControllerTransitionCoordinator) {
+        super.viewWillTransitionToSize(size, withTransitionCoordinator: coordinator)
+        
+        darkScreenView.backgroundColor = UIColor.blackColor()
     }
     
     // MARK: Initialization
@@ -133,7 +161,7 @@ public class FLPullUpViewController: UIViewController {
         darkScreenView.frame = view.bounds
         
         view.clipsToBounds = true
-
+        
         panGesture = UIPanGestureRecognizer(target: self, action: #selector(panContainer(_:)))
         
         //always fill the view
@@ -142,7 +170,7 @@ public class FLPullUpViewController: UIViewController {
         containerView.addGestureRecognizer(panGesture)
         
         tapGesture = UITapGestureRecognizer(target: self, action: #selector(tapGesturePressed(_:)))
-
+        
         darkScreenView.addGestureRecognizer(tapGesture)
         
         darkScreenView.hide = true
@@ -170,7 +198,7 @@ public class FLPullUpViewController: UIViewController {
         while (currentVC?.presentedViewController != nil){
             currentVC = currentVC?.presentedViewController
         }
-
+        
         currentVC!.presentViewController(self, animated: false) { () -> Void in
             if self.pullUpDistance == 0{
                 self.pullUpDistance = self.view.bounds.height / 2
@@ -183,30 +211,6 @@ public class FLPullUpViewController: UIViewController {
         self.dismissViewControllerAnimated(false, completion: completion)
     }
     
-    // MARK: Button action
-    override func dismissViewControllerAnimated(flag: Bool, completion: (() -> Void)?) {
-        
-        pullUpDistance = 0
-        
-        UIView.animateWithDuration(0.3, animations: {[weak self] () -> Void in
-            
-            self?.darkScreenView.hide = true
-            
-        }) { (complete) -> Void in
-            if (complete){
-                if let delegate = self.delegate{
-                    delegate.pullUpVC!(self, didCloseWith: self.rootViewController)
-                }
-                
-                if let vc = self.rootViewController{
-                    vc.view.removeFromSuperview()
-                }
-                
-                super.dismissViewControllerAnimated(false, completion: completion)
-            }
-        }
-    }
-
     
     func tapGesturePressed(gesture: UITapGestureRecognizer){
         
@@ -229,7 +233,7 @@ public class FLPullUpViewController: UIViewController {
             pullUpDistance = originalPullDistance - translation.y
             
             if pullUpDistance > screenRatio * view.bounds.height{
-
+                
                 pullUpDistance = screenRatio * view.bounds.height
             }
             
@@ -242,11 +246,5 @@ public class FLPullUpViewController: UIViewController {
                 pullUpDistance = originalPullDistance
             }
         }
-    }
-    
-    override func viewWillTransitionToSize(size: CGSize, withTransitionCoordinator coordinator: UIViewControllerTransitionCoordinator) {
-        super.viewWillTransitionToSize(size, withTransitionCoordinator: coordinator)
-        
-        darkScreenView.backgroundColor = UIColor.blackColor()
     }
 }
