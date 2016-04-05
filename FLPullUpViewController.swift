@@ -7,16 +7,6 @@ import Foundation
 
 public class FLPullUpViewController: UIViewController {
     
-    public weak var delegate: PullUpDelegate?
-    public var compressViewForLargeScreens = false
-    public var maxWidthForCompressedView: CGFloat = 700
-
-    public var pullUpDistance: CGFloat = 0{
-        didSet{
-            view.setNeedsLayout()
-        }
-    }
-    
     private var rootViewController: UIViewController!{
         
         didSet{
@@ -47,6 +37,17 @@ public class FLPullUpViewController: UIViewController {
     private var containerPullAnimation: NSTimeInterval = 0.3
     private var navBarHeight: CGFloat = 0
     
+    public weak var delegate: PullUpDelegate?
+    
+    public var compressViewForLargeScreens = false
+    public var maxWidthForCompressedView: CGFloat = 700
+    
+    public var pullUpDistance: CGFloat = 0{
+        didSet{
+            view.setNeedsLayout()
+        }
+    }
+
     public init(){
         super.init(nibName: nil, bundle: nil)
     }
@@ -72,13 +73,13 @@ public class FLPullUpViewController: UIViewController {
     }
 
     // MARK: Life Cycle
-    override public func viewDidLoad() {
+    override func viewDidLoad() {
         super.viewDidLoad()
         
         defaultConfiguration()
     }
     
-    override public func viewDidAppear(animated: Bool) {
+    override func viewDidAppear(animated: Bool) {
         super.viewDidAppear(animated)
         
         UIView.animateWithDuration(0.3) { () -> Void in
@@ -87,7 +88,7 @@ public class FLPullUpViewController: UIViewController {
         }
     }
     
-    override public func viewDidLayoutSubviews() {
+    override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         
         var containerX: CGFloat = 0
@@ -177,8 +178,13 @@ public class FLPullUpViewController: UIViewController {
         }
     }
     
+    public func dismiss(completion: (() -> Void)? = nil){
+        
+        self.dismissViewControllerAnimated(false, completion: completion)
+    }
+    
     // MARK: Button action
-    override public func dismissViewControllerAnimated(flag: Bool, completion: (() -> Void)?) {
+    override func dismissViewControllerAnimated(flag: Bool, completion: (() -> Void)?) {
         
         pullUpDistance = 0
         
@@ -186,25 +192,21 @@ public class FLPullUpViewController: UIViewController {
             
             self?.darkScreenView.hide = true
             
-            }) { (complete) -> Void in
-                if (complete){
-                    if let delegate = self.delegate{
-                        delegate.pullUpVC!(self, didCloseWith: self.rootViewController)
-                    }
-                    
-                    if let vc = self.rootViewController{
-                        vc.view.removeFromSuperview()
-                    }
-                    
-                    super.dismissViewControllerAnimated(false, completion: completion)
+        }) { (complete) -> Void in
+            if (complete){
+                if let delegate = self.delegate{
+                    delegate.pullUpVC!(self, didCloseWith: self.rootViewController)
                 }
+                
+                if let vc = self.rootViewController{
+                    vc.view.removeFromSuperview()
+                }
+                
+                super.dismissViewControllerAnimated(false, completion: completion)
+            }
         }
     }
-    
-    public func dismiss(completion: (() -> Void)? = nil){
-        
-        self.dismissViewControllerAnimated(false, completion: completion)
-    }
+
     
     func tapGesturePressed(gesture: UITapGestureRecognizer){
         
@@ -242,7 +244,7 @@ public class FLPullUpViewController: UIViewController {
         }
     }
     
-    override public func viewWillTransitionToSize(size: CGSize, withTransitionCoordinator coordinator: UIViewControllerTransitionCoordinator) {
+    override func viewWillTransitionToSize(size: CGSize, withTransitionCoordinator coordinator: UIViewControllerTransitionCoordinator) {
         super.viewWillTransitionToSize(size, withTransitionCoordinator: coordinator)
         
         darkScreenView.backgroundColor = UIColor.blackColor()
