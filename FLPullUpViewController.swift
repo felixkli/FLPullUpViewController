@@ -24,7 +24,7 @@ public class FLPullUpViewController: UIViewController {
                 oldVC.view.removeFromSuperview()
             }
             
-            if rootViewController is UINavigationCopntroller{
+            if rootViewController is UINavigationController{
                 let navVC = rootViewController as? UINavigationController
                 navVC?.viewControllers.first?.automaticallyAdjustsScrollViewInsets = false
             }
