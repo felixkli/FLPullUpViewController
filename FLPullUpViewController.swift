@@ -47,11 +47,11 @@ public class FLPullUpViewController: UIViewController {
     private var containerPullAnimation: NSTimeInterval = 0.3
     private var navBarHeight: CGFloat = 0
     
-    init(){
+    public init(){
         super.init(nibName: nil, bundle: nil)
     }
     
-    init(rootViewController: UIViewController) {
+    public init(rootViewController: UIViewController) {
         
         self.rootViewController = rootViewController
         
@@ -68,7 +68,7 @@ public class FLPullUpViewController: UIViewController {
     }
 
     required public init?(coder aDecoder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
+        super.init(coder: aDecoder)
     }
 
     // MARK: Life Cycle
