@@ -1,6 +1,6 @@
 //
 //  DarkScreenView.swift
-//  HypebeastStore
+//  FLPullUpViewController
 //
 //  Created by Felix Li on 1/12/15.
 //  Copyright © 2015 101medialab. All rights reserved.
