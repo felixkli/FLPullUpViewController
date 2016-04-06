@@ -7,7 +7,7 @@ import Foundation
 
 public class FLPullUpViewController: UIViewController {
     
-    private var rootViewController: UIViewController!{
+    private var rootViewController: UIViewController = UIViewController(){
         
         didSet{
             if let oldVC = oldValue{
