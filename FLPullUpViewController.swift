@@ -10,18 +10,15 @@ public class FLPullUpViewController: UIViewController {
     private var rootViewController: UIViewController = UIViewController(){
         
         didSet{
-            if let oldVC = oldValue{
-                oldVC.view.removeFromSuperview()
-            }
+            
+            oldValue.view.removeFromSuperview()
             
             if rootViewController is UINavigationController{
                 let navVC = rootViewController as? UINavigationController
                 navVC?.viewControllers.first?.automaticallyAdjustsScrollViewInsets = false
             }
             
-            if let newVC = rootViewController{
-                blurEffectView.addSubview(newVC.view)
-            }
+            blurEffectView.addSubview(rootViewController.view)
             
             modalPresentationStyle = UIModalPresentationStyle.OverCurrentContext
         }
@@ -109,15 +106,12 @@ public class FLPullUpViewController: UIViewController {
         self.rootViewController.view.frame.size = CGSizeMake(containerWidth, view.bounds.height)
         
         UIView.animateWithDuration(0.3, animations: { () -> Void in
-            self.containerView.frame = CGRectMake(
-                containerX,
-                self.view.bounds.height - self.pullUpDistance,
-                containerWidth,
-                self.view.bounds.height)
             
+            self.containerView.frame = CGRectMake(containerX, self.view.bounds.height - self.pullUpDistance, containerWidth, self.view.bounds.height)
             self.darkScreenView.updateFrame()
             
         }) { (complete) -> Void in
+            
             self.blurEffectView.frame = self.containerView.bounds
             self.rootViewController.view.frame.size = CGSizeMake(self.containerView.bounds.width, self.pullUpDistance)
             self.darkScreenView.backgroundColor = UIColor.clearColor()
@@ -139,9 +133,7 @@ public class FLPullUpViewController: UIViewController {
                     delegate.pullUpVC!(self, didCloseWith: self.rootViewController)
                 }
                 
-                if let vc = self.rootViewController{
-                    vc.view.removeFromSuperview()
-                }
+                self.rootViewController.view.removeFromSuperview()
                 
                 super.dismissViewControllerAnimated(false, completion: completion)
             }
@@ -176,6 +168,16 @@ public class FLPullUpViewController: UIViewController {
         darkScreenView.hide = true
         
         darkScreenView.maskedView = containerView
+        
+        if rootViewController is UINavigationController,
+            let navVC = rootViewController as? UINavigationController,
+            let navRootVC = navVC.viewControllers.first{
+            navRootVC.automaticallyAdjustsScrollViewInsets = false
+        }
+        
+        blurEffectView.addSubview(rootViewController.view)
+        
+        modalPresentationStyle = UIModalPresentationStyle.OverCurrentContext
         
         containerView.addSubview(blurEffectView)
         view.addSubview(darkScreenView)
