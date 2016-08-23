@@ -106,17 +106,15 @@ public class FLPullUpViewController: UIViewController {
             self.darkScreenView.updateFrame()
         }
         
-        self.rootViewController.view.frame.size = CGSizeMake(containerWidth, view.bounds.height)
-        
         UIView.animateWithDuration(0.3, animations: { () -> Void in
             
             self.containerView.frame = CGRectMake(containerX, self.view.bounds.height - self.pullUpDistance, containerWidth, self.view.bounds.height)
             self.darkScreenView.updateFrame()
+            self.rootViewController.view.frame.size = CGSizeMake(self.containerView.bounds.width, self.pullUpDistance)
             
         }) { (complete) -> Void in
             
             self.blurEffectView.frame = self.containerView.bounds
-            self.rootViewController.view.frame.size = CGSizeMake(self.containerView.bounds.width, self.pullUpDistance)
             self.darkScreenView.backgroundColor = UIColor.clearColor()
         }
     }
@@ -247,6 +245,7 @@ public class FLPullUpViewController: UIViewController {
         if gesture.state == .Began{
             
             UIView.setAnimationsEnabled(false)
+            
             originalPullDistance = pullUpDistance
             
         }else if gesture.state == .Changed{
