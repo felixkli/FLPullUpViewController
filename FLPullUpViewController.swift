@@ -21,7 +21,6 @@ extension PullUpDelegate{
     }
 }
 
-
 public class FLPullUpViewController: UIViewController {
     
     private var rootViewController: UIViewController = UIViewController(){
@@ -48,6 +47,13 @@ public class FLPullUpViewController: UIViewController {
     
     public var compressViewForLargeScreens = false
     public var maxWidthForCompressedView: CGFloat = 700
+    
+    public var blurBackground = true{
+        didSet{
+            
+            updateBlur()
+        }
+    }
     
     public var pullUpDistance: CGFloat = 0{
         didSet{
@@ -102,13 +108,15 @@ public class FLPullUpViewController: UIViewController {
         self.darkScreenView.frame = view.bounds
         
         if self.containerView.frame == CGRectZero{
+            
             self.containerView.frame = CGRectMake(containerX, view.bounds.height, containerWidth, view.bounds.height)
+            self.rootViewController.view.frame.size.width = containerWidth
             self.darkScreenView.updateFrame()
         }
         
         UIView.animateWithDuration(0.3, animations: { () -> Void in
             
-            self.containerView.frame = CGRectMake(containerX, self.view.bounds.height - self.pullUpDistance, containerWidth, self.view.bounds.height)
+            self.containerView.frame = CGRectMake(containerX, self.view.bounds.height - self.pullUpDistance, containerWidth, self.pullUpDistance)
             self.darkScreenView.updateFrame()
             self.rootViewController.view.frame.size = CGSizeMake(self.containerView.bounds.width, self.pullUpDistance)
             
@@ -116,6 +124,25 @@ public class FLPullUpViewController: UIViewController {
             
             self.blurEffectView.frame = self.containerView.bounds
             self.darkScreenView.backgroundColor = UIColor.clearColor()
+        }
+    }
+    
+    func updateBlur(){
+        
+        blurEffectView.removeFromSuperview()
+        rootViewController.view.removeFromSuperview()
+        
+        if blurBackground{
+            
+            containerView.backgroundColor = UIColor.clearColor()
+            
+            containerView.addSubview(blurEffectView)
+            blurEffectView.addSubview(rootViewController.view)
+        }else{
+            
+            containerView.backgroundColor = UIColor(white: 0.95, alpha: 1)
+            
+            containerView.addSubview(rootViewController.view)
         }
     }
     
@@ -129,7 +156,7 @@ public class FLPullUpViewController: UIViewController {
             displayingVC.automaticallyAdjustsScrollViewInsets = false
         }
         
-        blurEffectView.addSubview(rootViewController.view)
+        updateBlur()
         
         modalPresentationStyle = UIModalPresentationStyle.OverCurrentContext
     }
@@ -153,6 +180,7 @@ public class FLPullUpViewController: UIViewController {
                 }
                 
                 self.rootViewController.view.removeFromSuperview()
+                self.rootViewController.dismissViewControllerAnimated(false, completion: nil)
                 
                 super.dismissViewControllerAnimated(false, completion: completion)
             }
@@ -190,7 +218,8 @@ public class FLPullUpViewController: UIViewController {
         
         setupPullUpVC()
         
-        containerView.addSubview(blurEffectView)
+        updateBlur()
+        
         view.addSubview(darkScreenView)
         view.addSubview(containerView)
     }
