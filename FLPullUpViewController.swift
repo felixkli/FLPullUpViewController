@@ -88,7 +88,7 @@ public class FLPullUpViewController: UIViewController {
     override public func viewDidAppear(animated: Bool) {
         super.viewDidAppear(animated)
         
-        UIView.animateWithDuration(0.3) { () -> Void in
+        UIView.animateWithDuration(containerPullAnimation) { () -> Void in
             
             self.darkScreenView.hide = false
         }
@@ -105,6 +105,11 @@ public class FLPullUpViewController: UIViewController {
             containerX = (view.bounds.width - containerWidth) / 2
         }
         
+        if let navVC = rootViewController as? UINavigationController{
+            
+            navVC.navigationBar.frame = CGRectMake(navVC.navigationBar.frame.origin.x, 0, navVC.navigationBar.frame.width, 44)
+        }
+        
         self.darkScreenView.frame = view.bounds
         
         if self.containerView.frame == CGRectZero{
@@ -114,7 +119,7 @@ public class FLPullUpViewController: UIViewController {
             self.darkScreenView.updateFrame()
         }
         
-        UIView.animateWithDuration(0.3, animations: { () -> Void in
+        UIView.animateWithDuration(containerPullAnimation, delay: 0, options: [UIViewAnimationOptions.BeginFromCurrentState], animations: {
             
             self.containerView.frame = CGRectMake(containerX, self.view.bounds.height - self.pullUpDistance, containerWidth, self.pullUpDistance)
             self.darkScreenView.updateFrame()
@@ -154,6 +159,11 @@ public class FLPullUpViewController: UIViewController {
             let displayingVC = navVC.viewControllers.first{
             
             displayingVC.automaticallyAdjustsScrollViewInsets = false
+            
+            navVC.navigationBar.setBackgroundImage(UIImage(), forBarMetrics: .Default)
+            
+            navVC.navigationBar.backgroundColor = UIColor.clearColor()
+            navVC.view.backgroundColor = UIColor.clearColor()
         }
         
         updateBlur()
@@ -164,9 +174,9 @@ public class FLPullUpViewController: UIViewController {
     // MARK: Button action
     override public func dismissViewControllerAnimated(flag: Bool, completion: (() -> Void)?) {
         
-        pullUpDistance = 0
+        self.pullUpDistance = 0
         
-        UIView.animateWithDuration(0.3, animations: { () -> Void in
+        UIView.animateWithDuration(containerPullAnimation, animations: { () -> Void in
             
             self.darkScreenView.hide = true
             
@@ -248,6 +258,8 @@ public class FLPullUpViewController: UIViewController {
             }
         }
         
+        containerView.frame = CGRectZero
+        
         currentVC.presentViewController(self, animated: false) { () in
             
             if self.pullUpDistance == 0{
@@ -258,9 +270,10 @@ public class FLPullUpViewController: UIViewController {
     
     public func dismiss(completion: (() -> Void)? = nil){
         
+        UIView.setAnimationsEnabled(true)
+        
         self.dismissViewControllerAnimated(false, completion: completion)
     }
-    
     
     func tapGesturePressed(gesture: UITapGestureRecognizer){
         
@@ -288,7 +301,7 @@ public class FLPullUpViewController: UIViewController {
                 pullUpDistance = screenRatio * view.bounds.height
             }
             
-        }else if gesture.state == .Ended || gesture.state == .Cancelled{
+        }else if gesture.state == .Ended || gesture.state == .Cancelled || gesture.state == .Failed{
             
             UIView.setAnimationsEnabled(true)
             if pullUpDistance < 0.25 * view.bounds.height{
