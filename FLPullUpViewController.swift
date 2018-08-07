@@ -275,12 +275,12 @@ public class FLPullUpViewController: UIViewController {
         self.dismiss(animated: false, completion: completion)
     }
     
-    func tapGesturePressed(gesture: UITapGestureRecognizer){
+    @objc func tapGesturePressed(gesture: UITapGestureRecognizer){
         
         dismiss()
     }
     
-    func panContainer(gesture: UIPanGestureRecognizer){
+    @objc func panContainer(gesture: UIPanGestureRecognizer){
         
         let translation = gesture.translation(in: self.view)
         
