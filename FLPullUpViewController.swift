@@ -245,6 +245,18 @@ public class FLPullUpViewController: UIViewController {
     //  .presentViewController does not check for UINavigationController, UIPageViewController cases
     public func show(){
         
+        /* Prevent Error:
+         
+         Fatal Exception: NSInvalidArgumentException
+         Application tried to present modally an active controller
+         
+         */
+        
+        guard self.presentingViewController == nil else {
+            
+            return
+        }
+        
         guard let window = UIApplication.shared.keyWindow,
             var currentVC = window.rootViewController else{
                 
