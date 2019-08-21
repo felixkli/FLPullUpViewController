@@ -27,7 +27,8 @@ public class FLPullUpViewController: UIViewController {
         
         didSet{
             
-            oldValue.view.removeFromSuperview()
+            //            oldValue.view.removeFromSuperview()
+            self.removeChild(child: oldValue)
             
             setupPullUpVC()
         }
@@ -39,6 +40,7 @@ public class FLPullUpViewController: UIViewController {
     private var containerView = UIView()
     private let blurEffectView = UIVisualEffectView(effect: UIBlurEffect(style: .extraLight))
     
+    private var tempPullHeight: CGFloat? = nil
     private var originalPullDistance: CGFloat = 0
     private var containerPullAnimation: TimeInterval = 0.3
     private var navBarHeight: CGFloat = 0
@@ -121,9 +123,9 @@ public class FLPullUpViewController: UIViewController {
         
         UIView.animate(withDuration: containerPullAnimation, delay: 0, options: [.beginFromCurrentState], animations: {
             
-            self.containerView.frame = CGRect(x: containerX, y: self.view.bounds.height - self.pullUpDistance, width: containerWidth, height: self.pullUpDistance)
+            self.containerView.frame = CGRect(x: containerX, y: self.view.bounds.height - self.pullUpDistance, width: containerWidth, height: (self.tempPullHeight ?? self.pullUpDistance))
             self.darkScreenView.updateFrame()
-            self.rootViewController.view.frame.size = CGSize(width: self.containerView.bounds.width, height: self.pullUpDistance)
+            self.rootViewController.view.frame.size = CGSize(width: self.containerView.bounds.width, height: self.containerView.frame.height)
             
         }) { (complete) -> Void in
             
@@ -135,19 +137,21 @@ public class FLPullUpViewController: UIViewController {
     func updateBlur(){
         
         blurEffectView.removeFromSuperview()
-        rootViewController.view.removeFromSuperview()
+        removeChild(child: rootViewController)
         
         if blurBackground{
             
             containerView.backgroundColor = UIColor.clear
             
             containerView.addSubview(blurEffectView)
-            blurEffectView.addSubview(rootViewController.view)
+            
+            self.addChild(child: rootViewController, to: blurEffectView)
         }else{
             
             containerView.backgroundColor = UIColor(white: 0.95, alpha: 1)
             
-            containerView.addSubview(rootViewController.view)
+            //            self.containerView.addSubview(rootViewController.view)
+            self.addChild(child: rootViewController, to: containerView)
         }
     }
     
@@ -174,7 +178,9 @@ public class FLPullUpViewController: UIViewController {
     // MARK: Button action
     override public func dismiss(animated flag: Bool, completion: (() -> Void)?) {
         
+        self.tempPullHeight = self.pullUpDistance
         self.pullUpDistance = 0
+        
         
         UIView.animate(withDuration: containerPullAnimation, animations: { () -> Void in
             
@@ -189,10 +195,14 @@ public class FLPullUpViewController: UIViewController {
                     delegate.pullUpVC(pullUpViewController: self, didCloseWith: self.rootViewController)
                 }
                 
-                self.rootViewController.view.removeFromSuperview()
+                self.removeChild(child: self.rootViewController)
                 self.rootViewController.dismiss(animated: false, completion: nil)
                 
+                self.tempPullHeight = nil
+                
                 super.dismiss(animated: false, completion: completion)
+                
+                
             }
         }
     }
@@ -296,14 +306,14 @@ public class FLPullUpViewController: UIViewController {
         
         let translation = gesture.translation(in: self.view)
         
-        if gesture.state == .began{
+        switch gesture.state {
+        case .began:
             
             UIView.setAnimationsEnabled(false)
             
             originalPullDistance = pullUpDistance
             
-        }else if gesture.state == .changed{
-            
+        case .changed:
             let screenRatio: CGFloat = 0.85
             
             pullUpDistance = originalPullDistance - translation.y
@@ -313,14 +323,59 @@ public class FLPullUpViewController: UIViewController {
                 pullUpDistance = screenRatio * view.bounds.height
             }
             
-        }else if gesture.state == .ended || gesture.state == .cancelled || gesture.state == .failed{
+        case .ended, .cancelled, .failed, .possible:
             
             UIView.setAnimationsEnabled(true)
+            
             if pullUpDistance < 0.25 * view.bounds.height{
                 dismiss()
             }else{
                 pullUpDistance = originalPullDistance
             }
+        @unknown default: break
         }
+    }
+}
+
+fileprivate extension UIViewController {
+    
+    func addChild(child: UIViewController?, to view: UIView? = nil, boundByConstraint: Bool = false) {
+        
+        guard
+            let child = child,
+            let baseView = (view ?? self.view)
+            else
+        {
+            print("[UIViewController] Unable to add child View Controller")
+            return
+        }
+        
+        addChild(child)
+        baseView.addSubview(child.view)
+        child.didMove(toParent: self)
+        
+        if boundByConstraint {
+            
+            child.view.translatesAutoresizingMaskIntoConstraints = false
+            
+            child.view.leadingAnchor.constraint(equalTo: baseView.leadingAnchor, constant: 0).isActive = true
+            child.view.trailingAnchor.constraint(equalTo: baseView.trailingAnchor, constant: 0).isActive = true
+            child.view.topAnchor.constraint(equalTo: baseView.topAnchor, constant: 0).isActive = true
+            child.view.bottomAnchor.constraint(equalTo: baseView.bottomAnchor, constant: 0).isActive = true
+        }
+    }
+    
+    func removeChild(child: UIViewController?) {
+        
+        guard
+            let child = child
+            else
+        {
+            print("[UIViewController] Unable to remove child View Controller")
+            return
+        }
+        child.willMove(toParent: nil)
+        child.view.removeFromSuperview()
+        child.removeFromParent()
     }
 }

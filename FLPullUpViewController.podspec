@@ -1,7 +1,7 @@
 Pod::Spec.new do |s|
 
   s.name         = "FLPullUpViewController"
-  s.version      = "0.3.1"
+  s.version      = "0.3.3"
   s.summary      = "A pull up controller that appears from the bottom."
   s.homepage     = "https://github.com/felixkli/FLPullUpViewController"
   s.license      = 'MIT'
@@ -10,4 +10,5 @@ Pod::Spec.new do |s|
   s.ios.deployment_target = "9.0"
   s.source       = { :git => "https://github.com/felixkli/FLPullUpViewController.git", :tag => s.version.to_s }
   s.source_files = 'FLPullUpViewController.swift', 'DarkScreenView.swift'
+  s.swift_version = '4.2'
 end
