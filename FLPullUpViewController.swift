@@ -27,7 +27,6 @@ public class FLPullUpViewController: UIViewController {
         
         didSet{
             
-            //            oldValue.view.removeFromSuperview()
             self.removeChild(child: oldValue)
             
             setupPullUpVC()
@@ -73,7 +72,7 @@ public class FLPullUpViewController: UIViewController {
         
         self.rootViewController = rootViewController
         
-        setupPullUpVC()
+        //        setupPullUpVC()
     }
     
     required public init?(coder aDecoder: NSCoder) {
@@ -181,7 +180,6 @@ public class FLPullUpViewController: UIViewController {
         self.tempPullHeight = self.pullUpDistance
         self.pullUpDistance = 0
         
-        
         UIView.animate(withDuration: containerPullAnimation, animations: { () -> Void in
             
             self.darkScreenView.hide = true
@@ -201,8 +199,6 @@ public class FLPullUpViewController: UIViewController {
                 self.tempPullHeight = nil
                 
                 super.dismiss(animated: false, completion: completion)
-                
-                
             }
         }
     }
@@ -330,8 +326,15 @@ public class FLPullUpViewController: UIViewController {
             if pullUpDistance < 0.25 * view.bounds.height{
                 dismiss()
             }else{
-                pullUpDistance = originalPullDistance
+                
+                self.pullUpDistance = self.originalPullDistance
+                
+                UIView.animate(withDuration: 0.3) {
+                    
+                    self.view.layoutIfNeeded()
+                }
             }
+            
         @unknown default: break
         }
     }
