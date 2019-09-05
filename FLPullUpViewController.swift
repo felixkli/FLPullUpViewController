@@ -122,7 +122,8 @@ public class FLPullUpViewController: UIViewController {
         
         UIView.animate(withDuration: containerPullAnimation, delay: 0, options: [.beginFromCurrentState], animations: {
             
-            self.containerView.frame = CGRect(x: containerX, y: self.view.bounds.height - self.pullUpDistance, width: containerWidth, height: (self.tempPullHeight ?? self.pullUpDistance))
+            self.containerView.frame = CGRect(x: containerX, y: self.view.frame.height - self.pullUpDistance, width: containerWidth, height: (self.tempPullHeight ?? self.pullUpDistance))
+            
             self.darkScreenView.updateFrame()
             self.rootViewController.view.frame.size = CGSize(width: self.containerView.bounds.width, height: self.containerView.frame.height)
             
@@ -298,6 +299,17 @@ public class FLPullUpViewController: UIViewController {
         dismiss()
     }
     
+    public override func didMove(toParent parent: UIViewController?) {
+        super.didMove(toParent: parent)
+        
+    }
+    
+    public override func willMove(toParent parent: UIViewController?) {
+        super.willMove(toParent: parent)
+        
+        
+    }
+    
     @objc func panContainer(gesture: UIPanGestureRecognizer){
         
         let translation = gesture.translation(in: self.view)
@@ -329,7 +341,7 @@ public class FLPullUpViewController: UIViewController {
                 
                 self.pullUpDistance = self.originalPullDistance
                 
-                UIView.animate(withDuration: 0.3) {
+                UIView.animate(withDuration: containerPullAnimation) {
                     
                     self.view.layoutIfNeeded()
                 }
