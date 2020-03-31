@@ -8,13 +8,13 @@
 
 import Foundation
 
-public protocol PullUpDelegate: class{
+public protocol PullUpDelegate: class {
     
     func pullUpVC(pullUpViewController: FLPullUpViewController, didCloseWith rootViewController:UIViewController)
 }
 
 // OPTIONAL
-extension PullUpDelegate{
+extension PullUpDelegate {
     
     func pullUpVC(pullUpViewController: FLPullUpViewController, didCloseWith rootViewController:UIViewController){
         
@@ -23,7 +23,7 @@ extension PullUpDelegate{
 
 public class FLPullUpViewController: UIViewController {
     
-    private var rootViewController: UIViewController = UIViewController(){
+    private var rootViewController: UIViewController = UIViewController() {
         
         didSet{
             
@@ -44,7 +44,22 @@ public class FLPullUpViewController: UIViewController {
     private var containerPullAnimation: TimeInterval = 0.3
     private var navBarHeight: CGFloat = 0
     
+    private var keyboardOpen: Bool = false
+    
     public weak var delegate: PullUpDelegate?
+    
+    public var pullToClose: Bool = true {
+        didSet{
+            if pullToClose,
+                let panGesture = panGesture {
+                
+                containerView.addGestureRecognizer(panGesture)
+            }else if containerView.gestureRecognizers?.contains(panGesture) == true{
+                
+                containerView.removeGestureRecognizer(panGesture)
+            }
+        }
+    }
     
     public var compressViewForLargeScreens = false
     public var maxWidthForCompressedView: CGFloat = 700
@@ -61,6 +76,8 @@ public class FLPullUpViewController: UIViewController {
             view.setNeedsLayout()
         }
     }
+    
+    public var expandWithKeyboard: Bool = false
     
     public init(){
         super.init(nibName: nil, bundle: nil)
@@ -121,7 +138,6 @@ public class FLPullUpViewController: UIViewController {
         }
         
         UIView.animate(withDuration: containerPullAnimation, delay: 0, options: [.beginFromCurrentState], animations: {
-            
             self.containerView.frame = CGRect(x: containerX, y: self.view.frame.height - self.pullUpDistance, width: containerWidth, height: (self.tempPullHeight ?? self.pullUpDistance))
             
             self.darkScreenView.updateFrame()
@@ -132,6 +148,17 @@ public class FLPullUpViewController: UIViewController {
             self.blurEffectView.frame = self.containerView.bounds
             self.darkScreenView.backgroundColor = UIColor.clear
         }
+        
+        print("[login] containerView: \(self.containerView.frame.height)")
+        print("[login] rootViewController: \(self.rootViewController.view.frame.height)")
+        
+        if let navVC = self.rootViewController as? UINavigationController {
+            
+            print("[login] loginVC: \(navVC.viewControllers.first?.view.frame.height)")
+            
+            navVC.viewControllers.first?.view.frame = self.rootViewController.view.frame
+        }
+
     }
     
     func updateBlur(){
@@ -150,8 +177,8 @@ public class FLPullUpViewController: UIViewController {
             
             containerView.backgroundColor = UIColor(white: 0.95, alpha: 1)
             
-            //            self.containerView.addSubview(rootViewController.view)
-            self.addChild(child: rootViewController, to: containerView)
+                        self.containerView.addSubview(rootViewController.view)
+//            self.addChild(child: rootViewController, to: containerView)
         }
     }
     
@@ -223,7 +250,13 @@ public class FLPullUpViewController: UIViewController {
         //always fill the view
         blurEffectView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         
-        containerView.addGestureRecognizer(panGesture)
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardOpened(_:)), name: UIResponder.keyboardWillShowNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardClosed(_:)), name: UIResponder.keyboardWillHideNotification, object: nil)
+        
+        
+        if pullToClose {
+            containerView.addGestureRecognizer(panGesture)
+        }
         
         tapGesture = UITapGestureRecognizer(target: self, action: #selector(tapGesturePressed(gesture:)))
         
@@ -259,12 +292,9 @@ public class FLPullUpViewController: UIViewController {
          
          */
         
-        guard self.presentingViewController == nil else {
-            
-            return
-        }
-        
-        guard let window = UIApplication.shared.keyWindow,
+        guard
+            self.presentingViewController == nil,
+            let window = UIApplication.shared.keyWindow,
             var currentVC = window.rootViewController else{
                 
                 return
@@ -310,7 +340,7 @@ public class FLPullUpViewController: UIViewController {
         
     }
     
-    @objc func panContainer(gesture: UIPanGestureRecognizer){
+    @objc func panContainer(gesture: UIPanGestureRecognizer) {
         
         let translation = gesture.translation(in: self.view)
         
@@ -350,6 +380,31 @@ public class FLPullUpViewController: UIViewController {
         @unknown default: break
         }
     }
+    
+    @objc func keyboardOpened(_ notification: Notification) {
+        
+        DispatchQueue.main.async {
+
+            if self.expandWithKeyboard {
+                self.originalPullDistance = self.pullUpDistance
+                self.pullUpDistance = self.originalPullDistance + 150
+            }
+        }
+    }
+    
+    @objc func keyboardClosed(_ notification: Notification) {
+        
+        DispatchQueue.main.async {
+
+            self.pullUpDistance = self.originalPullDistance
+        }
+    }
+    
+    deinit {
+        
+        NotificationCenter.default.removeObserver(self)
+    }
+    
 }
 
 fileprivate extension UIViewController {
