@@ -148,17 +148,6 @@ public class FLPullUpViewController: UIViewController {
             self.blurEffectView.frame = self.containerView.bounds
             self.darkScreenView.backgroundColor = UIColor.clear
         }
-        
-        print("[login] containerView: \(self.containerView.frame.height)")
-        print("[login] rootViewController: \(self.rootViewController.view.frame.height)")
-        
-        if let navVC = self.rootViewController as? UINavigationController {
-            
-            print("[login] loginVC: \(navVC.viewControllers.first?.view.frame.height)")
-            
-            navVC.viewControllers.first?.view.frame = self.rootViewController.view.frame
-        }
-
     }
     
     func updateBlur(){
