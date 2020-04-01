@@ -166,8 +166,7 @@ public class FLPullUpViewController: UIViewController {
             
             containerView.backgroundColor = UIColor(white: 0.95, alpha: 1)
             
-                        self.containerView.addSubview(rootViewController.view)
-//            self.addChild(child: rootViewController, to: containerView)
+            self.addChild(child: rootViewController, to: containerView)
         }
     }
     
