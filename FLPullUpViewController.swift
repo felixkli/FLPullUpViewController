@@ -63,6 +63,18 @@ public class FLPullUpViewController: UIViewController {
     
     public var compressViewForLargeScreens = false
     public var maxWidthForCompressedView: CGFloat = 700
+    public var setBlackBorder: Bool = false {
+        didSet{
+            if setBlackBorder {
+                containerView.layer.borderColor = UIColor.black.cgColor
+                containerView.layer.borderWidth = 1
+            }else{
+                containerView.layer.borderColor = UIColor.black.cgColor
+                containerView.layer.borderWidth = 0
+            }
+        }
+    }
+
     
     public var blurBackground = true{
         didSet{
