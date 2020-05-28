@@ -395,8 +395,10 @@ public class FLPullUpViewController: UIViewController {
     @objc func keyboardClosed(_ notification: Notification) {
         
         DispatchQueue.main.async {
-
-            self.pullUpDistance = self.originalPullDistance
+            
+            if self.expandWithKeyboard {
+                self.pullUpDistance = self.originalPullDistance
+            }
         }
     }
     
