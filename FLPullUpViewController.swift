@@ -24,12 +24,9 @@ extension PullUpDelegate {
 public class FLPullUpViewController: UIViewController {
     
     private var rootViewController: UIViewController = UIViewController() {
-        
         didSet{
-            
             self.removeChild(child: oldValue)
-            
-            setupPullUpVC()
+            self.setupPullUpVC()
         }
     }
     
@@ -39,8 +36,10 @@ public class FLPullUpViewController: UIViewController {
     private var containerView = UIView()
     private let blurEffectView = UIVisualEffectView(effect: UIBlurEffect(style: .extraLight))
     
+    private var isPanning = false
+    
     private var tempPullHeight: CGFloat? = nil
-    private var originalPullDistance: CGFloat = 0
+    private var originalPullDistance: CGFloat? = nil
     private var containerPullAnimation: TimeInterval = 0.3
     private var navBarHeight: CGFloat = 0
     
@@ -50,10 +49,10 @@ public class FLPullUpViewController: UIViewController {
     
     public var pullToClose: Bool = true {
         didSet{
-            if pullToClose,
-                let panGesture = panGesture {
+            if pullToClose, let panGesture = panGesture {
                 
                 containerView.addGestureRecognizer(panGesture)
+                
             }else if containerView.gestureRecognizers?.contains(panGesture) == true{
                 
                 containerView.removeGestureRecognizer(panGesture)
@@ -85,9 +84,16 @@ public class FLPullUpViewController: UIViewController {
     
     public var pullUpDistance: CGFloat = 0{
         didSet{
+            
+            if originalPullDistance == nil {
+                self.originalPullDistance = self.pullUpDistance
+            }
+            
             view.setNeedsLayout()
         }
     }
+    
+//    private var movementDistance: CGFloat = 0
     
     public var expandWithKeyboard: Bool = false
     
@@ -142,18 +148,19 @@ public class FLPullUpViewController: UIViewController {
         
         self.darkScreenView.frame = view.bounds
         
-        if self.containerView.frame == CGRect.zero{
+        if self.containerView.frame == CGRect.zero {
             
             self.containerView.frame = CGRect(x: containerX, y: view.bounds.height, width: containerWidth, height: view.bounds.height)
-            self.rootViewController.view.frame.size.width = containerWidth
             self.darkScreenView.updateFrame()
         }
         
         UIView.animate(withDuration: containerPullAnimation, delay: 0, options: [.beginFromCurrentState], animations: {
-            self.containerView.frame = CGRect(x: containerX, y: self.view.frame.height - self.pullUpDistance, width: containerWidth, height: (self.tempPullHeight ?? self.pullUpDistance))
+            
+            self.containerView.frame.origin = CGPoint(x: containerX, y: self.view.frame.height - self.pullUpDistance)
+            self.containerView.frame.size = CGSize(width: containerWidth, height: (self.tempPullHeight ?? max(self.pullUpDistance, (self.originalPullDistance ?? 0))))
+            self.rootViewController.view.frame.size = CGSize(width: self.containerView.bounds.width, height: self.containerView.frame.height)
             
             self.darkScreenView.updateFrame()
-            self.rootViewController.view.frame.size = CGSize(width: self.containerView.bounds.width, height: self.containerView.frame.height)
             
         }) { (complete) -> Void in
             
@@ -181,6 +188,14 @@ public class FLPullUpViewController: UIViewController {
             self.addChild(child: rootViewController, to: containerView)
         }
     }
+    
+//    func updatePullUpDistance(_ distance: CGFloat) {
+//
+//        self.originalPullDistance = distance
+//        self.pullUpDistance = distance
+//
+//        view.setNeedsLayout()
+//    }
     
     // MARK: Update appearance
     
@@ -311,7 +326,7 @@ public class FLPullUpViewController: UIViewController {
         
         currentVC.present(self, animated: false) {
             
-            if self.pullUpDistance == 0{
+            if self.pullUpDistance == 0 {
                 self.pullUpDistance = self.view.bounds.height / 2
             }
         }
@@ -321,7 +336,11 @@ public class FLPullUpViewController: UIViewController {
         
         UIView.setAnimationsEnabled(true)
         
+        self.originalPullDistance = nil
+//        self.originalPullDistance = 0
+        
         self.dismiss(animated: false, completion: completion)
+        print("[pull] dismiss")
     }
     
     @objc func tapGesturePressed(gesture: UITapGestureRecognizer){
@@ -336,8 +355,7 @@ public class FLPullUpViewController: UIViewController {
     
     public override func willMove(toParent parent: UIViewController?) {
         super.willMove(toParent: parent)
-        
-        
+           
     }
     
     @objc func panContainer(gesture: UIPanGestureRecognizer) {
@@ -347,6 +365,7 @@ public class FLPullUpViewController: UIViewController {
         switch gesture.state {
         case .began:
             
+            isPanning = true
             UIView.setAnimationsEnabled(false)
             
             originalPullDistance = pullUpDistance
@@ -354,7 +373,9 @@ public class FLPullUpViewController: UIViewController {
         case .changed:
             let screenRatio: CGFloat = 0.85
             
-            pullUpDistance = originalPullDistance - translation.y
+            if let originalPullDistance = originalPullDistance {
+                pullUpDistance = originalPullDistance - translation.y
+            }
             
             if pullUpDistance > screenRatio * view.bounds.height{
                 
@@ -363,13 +384,17 @@ public class FLPullUpViewController: UIViewController {
             
         case .ended, .cancelled, .failed, .possible:
             
+            isPanning = false
+            
             UIView.setAnimationsEnabled(true)
             
             if pullUpDistance < 0.25 * view.bounds.height{
                 dismiss()
             }else{
                 
-                self.pullUpDistance = self.originalPullDistance
+                if let originalPullDistance = originalPullDistance {
+                    self.pullUpDistance = originalPullDistance
+                }
                 
                 UIView.animate(withDuration: containerPullAnimation) {
                     
@@ -383,27 +408,43 @@ public class FLPullUpViewController: UIViewController {
     
     @objc func keyboardOpened(_ notification: Notification) {
         
+        print("[pull] keyboard open")
+        
         DispatchQueue.main.async {
-
-            if self.expandWithKeyboard {
+            
+            guard
+                self.expandWithKeyboard
+                
+                else { return
+            }
+            
+            if self.originalPullDistance == nil {
                 self.originalPullDistance = self.pullUpDistance
-                self.pullUpDistance = self.originalPullDistance + 150
+            }
+            
+            if let originalPullDistance = self.originalPullDistance{
+            
+                self.pullUpDistance = originalPullDistance + 100
             }
         }
     }
     
     @objc func keyboardClosed(_ notification: Notification) {
         
+        print("[pull] keyboard close")
+        
         DispatchQueue.main.async {
             
-            if self.expandWithKeyboard {
-                self.pullUpDistance = self.originalPullDistance
+            if self.expandWithKeyboard,
+                let originalPullDistance = self.originalPullDistance {
+                
+                self.pullUpDistance = originalPullDistance
             }
         }
     }
     
     deinit {
-        
+        print("[deinit] FLPullViewController: \(rootViewController)")
         NotificationCenter.default.removeObserver(self)
     }
     
@@ -416,8 +457,9 @@ fileprivate extension UIViewController {
         guard
             let child = child,
             let baseView = (view ?? self.view)
-            else
-        {
+            
+            else {
+                
             print("[UIViewController] Unable to add child View Controller")
             return
         }
