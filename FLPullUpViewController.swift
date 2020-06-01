@@ -23,6 +23,9 @@ extension PullUpDelegate {
 
 public class FLPullUpViewController: UIViewController {
     
+    private static let pullBarHeight: CGFloat = 20
+//    private static let navBarHeight: CGFloat = 20
+
     private var rootViewController: UIViewController = UIViewController() {
         didSet{
             self.removeChild(child: oldValue)
@@ -38,12 +41,16 @@ public class FLPullUpViewController: UIViewController {
     
     private var isPanning = false
     
-    private var tempPullHeight: CGFloat? = nil
     private var originalPullDistance: CGFloat? = nil
     private var containerPullAnimation: TimeInterval = 0.3
-    private var navBarHeight: CGFloat = 0
     
-    private var keyboardOpen: Bool = false
+    private var keyboardExpanded: Bool = false
+        
+    lazy private var pullTabImageView: UIImageView = {
+        
+        let imageView = UIImageView(image: UIImage(named: "close-icon", in: Bundle(for: Self), compatibleWith: nil))
+        return imageView
+    }()
     
     public weak var delegate: PullUpDelegate?
     
@@ -93,8 +100,13 @@ public class FLPullUpViewController: UIViewController {
         }
     }
     
-//    private var movementDistance: CGFloat = 0
-    
+    public var showPullUpBar: Bool = false {
+        didSet{
+            
+            view.setNeedsLayout()
+        }
+    }
+        
     public var expandWithKeyboard: Bool = false
     
     public init(){
@@ -124,7 +136,7 @@ public class FLPullUpViewController: UIViewController {
     override public func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         
-        UIView.animate(withDuration: containerPullAnimation) { () -> Void in
+        UIView.animate(withDuration: containerPullAnimation) {
             
             self.darkScreenView.hide = false
         }
@@ -157,12 +169,39 @@ public class FLPullUpViewController: UIViewController {
         UIView.animate(withDuration: containerPullAnimation, delay: 0, options: [.beginFromCurrentState], animations: {
             
             self.containerView.frame.origin = CGPoint(x: containerX, y: self.view.frame.height - self.pullUpDistance)
-            self.containerView.frame.size = CGSize(width: containerWidth, height: (self.tempPullHeight ?? max(self.pullUpDistance, (self.originalPullDistance ?? 0))))
-            self.rootViewController.view.frame.size = CGSize(width: self.containerView.bounds.width, height: self.containerView.frame.height)
+            self.containerView.frame.size = CGSize(width: containerWidth, height: max(self.pullUpDistance, (self.originalPullDistance ?? 0)))
             
+            let pullBarHeight = (self.showPullUpBar)
+                ? Self.pullBarHeight
+                : 0
+            
+            if #available(iOS 11.0, *) {
+                self.rootViewController.additionalSafeAreaInsets = UIEdgeInsets(top: pullBarHeight, left: 0, bottom: 0, right: 0)
+            }
+            
+            print("[pull] self.containerView.bounds.width: \(self.containerView.bounds.width)")
+            print("[pull] rootViewController: \(self.rootViewController.view.bounds.width)")
+            print("[pull] childView: \((self.rootViewController as? UINavigationController)?.viewControllers.first?.view.bounds.width)")
+            
+            // Setting rootViewController as frame
+            self.rootViewController.view.frame = CGRect(x: 0, y: 0, width: self.containerView.bounds.width, height: self.containerView.frame.height)
+                        
             self.darkScreenView.updateFrame()
             
         }) { (complete) -> Void in
+            
+            if self.showPullUpBar {
+                
+                self.pullTabImageView.frame = CGRect(x: (self.containerView.bounds.width - self.pullTabImageView.bounds.width) / 2,
+                                                     y: (Self.pullBarHeight - self.pullTabImageView.bounds.height) / 2 + 5,
+                                                     width: self.pullTabImageView.bounds.width,
+                                                     height: self.pullTabImageView.bounds.height)
+                
+                self.containerView.addSubview(self.pullTabImageView)
+            }else{
+                
+                self.pullTabImageView.removeFromSuperview()
+            }
             
             self.blurEffectView.frame = self.containerView.bounds
             self.darkScreenView.backgroundColor = UIColor.clear
@@ -183,7 +222,8 @@ public class FLPullUpViewController: UIViewController {
             self.addChild(child: rootViewController, to: blurEffectView)
         }else{
             
-            containerView.backgroundColor = UIColor(white: 0.95, alpha: 1)
+//            containerView.backgroundColor = UIColor(white: 0.95, alpha: 1)
+            containerView.backgroundColor = .white
             
             self.addChild(child: rootViewController, to: containerView)
         }
@@ -220,7 +260,7 @@ public class FLPullUpViewController: UIViewController {
     // MARK: Button action
     override public func dismiss(animated flag: Bool, completion: (() -> Void)?) {
         
-        self.tempPullHeight = self.pullUpDistance
+//        self.tempPullHeight = self.pullUpDistance
         self.pullUpDistance = 0
         
         UIView.animate(withDuration: containerPullAnimation, animations: { () -> Void in
@@ -239,7 +279,8 @@ public class FLPullUpViewController: UIViewController {
                 self.removeChild(child: self.rootViewController)
                 self.rootViewController.dismiss(animated: false, completion: nil)
                 
-                self.tempPullHeight = nil
+//                self.tempPullHeight = nil
+                self.originalPullDistance = nil
                 
                 super.dismiss(animated: false, completion: completion)
             }
@@ -336,11 +377,7 @@ public class FLPullUpViewController: UIViewController {
         
         UIView.setAnimationsEnabled(true)
         
-        self.originalPullDistance = nil
-//        self.originalPullDistance = 0
-        
         self.dismiss(animated: false, completion: completion)
-        print("[pull] dismiss")
     }
     
     @objc func tapGesturePressed(gesture: UITapGestureRecognizer){
@@ -377,9 +414,9 @@ public class FLPullUpViewController: UIViewController {
                 pullUpDistance = originalPullDistance - translation.y
             }
             
-            if pullUpDistance > screenRatio * view.bounds.height{
+            if pullUpDistance > max(originalPullDistance ?? 0, screenRatio * view.bounds.height) {
                 
-                pullUpDistance = screenRatio * view.bounds.height
+                pullUpDistance = max(originalPullDistance ?? 0, screenRatio * view.bounds.height)
             }
             
         case .ended, .cancelled, .failed, .possible:
@@ -407,16 +444,17 @@ public class FLPullUpViewController: UIViewController {
     }
     
     @objc func keyboardOpened(_ notification: Notification) {
-        
-        print("[pull] keyboard open")
-        
+  
         DispatchQueue.main.async {
             
             guard
-                self.expandWithKeyboard
+                self.expandWithKeyboard,
+                !self.keyboardExpanded
                 
                 else { return
             }
+            
+            self.keyboardExpanded = true
             
             if self.originalPullDistance == nil {
                 self.originalPullDistance = self.pullUpDistance
@@ -440,6 +478,8 @@ public class FLPullUpViewController: UIViewController {
                 
                 self.pullUpDistance = originalPullDistance
             }
+            
+            self.keyboardExpanded = false
         }
     }
     
@@ -483,8 +523,9 @@ fileprivate extension UIViewController {
         
         guard
             let child = child
-            else
-        {
+           
+            else {
+                
             print("[UIViewController] Unable to remove child View Controller")
             return
         }
