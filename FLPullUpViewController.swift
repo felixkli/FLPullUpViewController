@@ -48,7 +48,7 @@ public class FLPullUpViewController: UIViewController {
         
     lazy private var pullTabImageView: UIImageView = {
         
-        let imageView = UIImageView(image: UIImage(named: "close-icon", in: Bundle(for: Self), compatibleWith: nil))
+        let imageView = UIImageView(image: UIImage(named: "close-icon", in: Bundle(for: FLPullUpViewController.self), compatibleWith: nil))
         return imageView
     }()
     
