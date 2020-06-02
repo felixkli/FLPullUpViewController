@@ -48,7 +48,7 @@ public class FLPullUpViewController: UIViewController {
         
     lazy private var pullTabImageView: UIImageView = {
         
-        let imageView = UIImageView(image: UIImage(named: "close-icon", in: Bundle(for: FLPullUpViewController.self), compatibleWith: nil))
+        let imageView = UIImageView(image: .dragIndicatorIcon)
         return imageView
     }()
     
@@ -118,8 +118,6 @@ public class FLPullUpViewController: UIViewController {
         super.init(nibName: nil, bundle: nil)
         
         self.rootViewController = rootViewController
-        
-        //        setupPullUpVC()
     }
     
     required public init?(coder aDecoder: NSCoder) {
@@ -178,11 +176,7 @@ public class FLPullUpViewController: UIViewController {
             if #available(iOS 11.0, *) {
                 self.rootViewController.additionalSafeAreaInsets = UIEdgeInsets(top: pullBarHeight, left: 0, bottom: 0, right: 0)
             }
-            
-            print("[pull] self.containerView.bounds.width: \(self.containerView.bounds.width)")
-            print("[pull] rootViewController: \(self.rootViewController.view.bounds.width)")
-            print("[pull] childView: \((self.rootViewController as? UINavigationController)?.viewControllers.first?.view.bounds.width)")
-            
+                        
             // Setting rootViewController as frame
             self.rootViewController.view.frame = CGRect(x: 0, y: 0, width: self.containerView.bounds.width, height: self.containerView.frame.height)
                         
@@ -229,14 +223,6 @@ public class FLPullUpViewController: UIViewController {
         }
     }
     
-//    func updatePullUpDistance(_ distance: CGFloat) {
-//
-//        self.originalPullDistance = distance
-//        self.pullUpDistance = distance
-//
-//        view.setNeedsLayout()
-//    }
-    
     // MARK: Update appearance
     
     func setupPullUpVC(){
@@ -260,7 +246,6 @@ public class FLPullUpViewController: UIViewController {
     // MARK: Button action
     override public func dismiss(animated flag: Bool, completion: (() -> Void)?) {
         
-//        self.tempPullHeight = self.pullUpDistance
         self.pullUpDistance = 0
         
         UIView.animate(withDuration: containerPullAnimation, animations: { () -> Void in
@@ -279,7 +264,6 @@ public class FLPullUpViewController: UIViewController {
                 self.removeChild(child: self.rootViewController)
                 self.rootViewController.dismiss(animated: false, completion: nil)
                 
-//                self.tempPullHeight = nil
                 self.originalPullDistance = nil
                 
                 super.dismiss(animated: false, completion: completion)
@@ -533,4 +517,9 @@ fileprivate extension UIViewController {
         child.view.removeFromSuperview()
         child.removeFromParent()
     }
+}
+
+extension UIImage {
+    
+    var dragIndicatorIcon = UIImage(named: "drag-indicator-icon", in: Bundle(for: FLPullUpViewController.self), compatibleWith: nil)
 }
