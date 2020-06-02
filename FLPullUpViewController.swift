@@ -253,21 +253,19 @@ public class FLPullUpViewController: UIViewController {
             self.darkScreenView.hide = true
             
         }) { (complete) -> Void in
-            
-            if (complete){
+                            
+            self.rootViewController.dismiss(animated: false, completion: {
                 
                 if let delegate = self.delegate{
                     
                     delegate.pullUpVC(pullUpViewController: self, didCloseWith: self.rootViewController)
                 }
                 
-                self.removeChild(child: self.rootViewController)
-                self.rootViewController.dismiss(animated: false, completion: nil)
-                
                 self.originalPullDistance = nil
                 
+                self.removeChild(child: self.rootViewController)
                 super.dismiss(animated: false, completion: completion)
-            }
+            })
         }
     }
     
@@ -323,7 +321,7 @@ public class FLPullUpViewController: UIViewController {
     
     // MARK: Present pullUpVC
     //  .presentViewController does not check for UINavigationController, UIPageViewController cases
-    public func show(){
+    public func show(_ completion: (() -> Void)? = nil){
         
         /* Prevent Error:
          
@@ -354,6 +352,8 @@ public class FLPullUpViewController: UIViewController {
             if self.pullUpDistance == 0 {
                 self.pullUpDistance = self.view.bounds.height / 2
             }
+            
+            completion?()
         }
     }
     
@@ -410,7 +410,7 @@ public class FLPullUpViewController: UIViewController {
             UIView.setAnimationsEnabled(true)
             
             if pullUpDistance < 0.25 * view.bounds.height{
-                dismiss()
+//                dismiss()
             }else{
                 
                 if let originalPullDistance = originalPullDistance {
@@ -444,10 +444,14 @@ public class FLPullUpViewController: UIViewController {
                 self.originalPullDistance = self.pullUpDistance
             }
             
-            if let originalPullDistance = self.originalPullDistance{
+//            if let originalPullDistance = self.originalPullDistance{
             
-                self.pullUpDistance = originalPullDistance + 100
-            }
+            let pullBarHeight = (self.showPullUpBar)
+                ? Self.pullBarHeight
+                : 0
+
+            self.pullUpDistance = (self.view.bounds.height - pullBarHeight)
+//            }
         }
     }
     
@@ -456,6 +460,10 @@ public class FLPullUpViewController: UIViewController {
         print("[pull] keyboard close")
         
         DispatchQueue.main.async {
+            
+            print("[pull] expandWithKeyboard: \(self.expandWithKeyboard)")
+            print("[pull] self.originalPullDistance: \(self.originalPullDistance)")
+            
             
             if self.expandWithKeyboard,
                 let originalPullDistance = self.originalPullDistance {
