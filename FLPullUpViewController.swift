@@ -21,10 +21,15 @@ extension PullUpDelegate {
     }
 }
 
+//public class FLPullUpController {
+//
+//    private let pullUpViewController = FLPullUpViewController()
+//
+//}
+
 public class FLPullUpViewController: UIViewController {
     
     private static let pullBarHeight: CGFloat = 20
-//    private static let navBarHeight: CGFloat = 20
 
     private var rootViewController: UIViewController = UIViewController() {
         didSet{
@@ -244,30 +249,33 @@ public class FLPullUpViewController: UIViewController {
     }
     
     // MARK: Button action
-    override public func dismiss(animated flag: Bool, completion: (() -> Void)?) {
-        
-        self.pullUpDistance = 0
-        
-        UIView.animate(withDuration: containerPullAnimation, animations: { () -> Void in
-            
-            self.darkScreenView.hide = true
-            
-        }) { (complete) -> Void in
-                            
-            self.rootViewController.dismiss(animated: false, completion: {
-                
-                if let delegate = self.delegate{
-                    
-                    delegate.pullUpVC(pullUpViewController: self, didCloseWith: self.rootViewController)
-                }
-                
-                self.originalPullDistance = nil
-                
-                self.removeChild(child: self.rootViewController)
-                super.dismiss(animated: false, completion: completion)
-            })
-        }
-    }
+//    override public func dismiss(animated flag: Bool, completion: (() -> Void)?) {
+//
+//        // Check for UIAlertController
+//
+//
+//        self.pullUpDistance = 0
+//
+//        UIView.animate(withDuration: containerPullAnimation, animations: { () -> Void in
+//
+//            self.darkScreenView.hide = true
+//
+//        }) { (complete) -> Void in
+//
+//            self.rootViewController.dismiss(animated: false, completion: {
+//
+//                if let delegate = self.delegate{
+//
+//                    delegate.pullUpVC(pullUpViewController: self, didCloseWith: self.rootViewController)
+//                }
+//
+//                self.originalPullDistance = nil
+//
+//                self.removeChild(child: self.rootViewController)
+//                super.dismiss(animated: false, completion: completion)
+//            })
+//        }
+//    }
     
     public override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
         super.viewWillTransition(to: size, with: coordinator)
@@ -357,12 +365,33 @@ public class FLPullUpViewController: UIViewController {
         }
     }
     
+//    public override func dismiss(animated flag: Bool, completion: (() -> Void)? = nil) {
+//        super.dismiss(animated: false, completion: completion)
+//    }
+    
     public func dismiss(completion: (() -> Void)? = nil){
         
         UIView.setAnimationsEnabled(true)
         
-        self.dismiss(animated: false, completion: completion)
+        self.pullUpDistance = 0
+        
+        UIView.animate(withDuration: containerPullAnimation, animations: { () -> Void in
+            
+            self.darkScreenView.hide = true
+            
+        }) { complete in
+            
+            if let delegate = self.delegate{
+                
+                delegate.pullUpVC(pullUpViewController: self, didCloseWith: self.rootViewController)
+            }
+            
+            self.originalPullDistance = nil
+            self.removeChild(child: self.rootViewController)
+            self.dismiss(animated: false, completion: completion)
+        }
     }
+ 
     
     @objc func tapGesturePressed(gesture: UITapGestureRecognizer){
         
@@ -410,7 +439,7 @@ public class FLPullUpViewController: UIViewController {
             UIView.setAnimationsEnabled(true)
             
             if pullUpDistance < 0.25 * view.bounds.height{
-//                dismiss()
+                dismiss()
             }else{
                 
                 if let originalPullDistance = originalPullDistance {
@@ -460,10 +489,6 @@ public class FLPullUpViewController: UIViewController {
         print("[pull] keyboard close")
         
         DispatchQueue.main.async {
-            
-            print("[pull] expandWithKeyboard: \(self.expandWithKeyboard)")
-            print("[pull] self.originalPullDistance: \(self.originalPullDistance)")
-            
             
             if self.expandWithKeyboard,
                 let originalPullDistance = self.originalPullDistance {
