@@ -145,6 +145,7 @@ public class FLPullUpViewController {
     public weak var delegate: PullUpDelegate?
     
     // flags
+    public var useSystemLayoutSizeFitting: Bool = false
     public var pullToClose: Bool = true {
         didSet{
             if pullToClose {
@@ -239,16 +240,7 @@ public class FLPullUpViewController {
             self.viewController.containerView.addSubview(viewController.blurEffectView)
             self.viewController.addChild(child: rootViewController, to: viewController.blurEffectView)
         }else{
-            
             self.viewController.containerView.backgroundColor = UIColor.clear
-//            self.viewController.containerView.backgroundColor = rootViewController.view.backgroundColor
-//
-//            if let navVC = self.rootViewController as? UINavigationController,
-//                let childController = navVC.viewControllers.first {
-//
-//                self.viewController.containerView.backgroundColor = childController.view.backgroundColor
-//            }
-            
             self.viewController.addChild(child: rootViewController, to: self.viewController.containerView)
         }
     }
@@ -339,7 +331,22 @@ public class FLPullUpViewController {
         currentVC.present(self.viewController, animated: false) {
             
             if self.pullUpDistance == 0 {
-                self.pullUpDistance = self.viewController.view.bounds.height / 2
+                
+                if self.useSystemLayoutSizeFitting {
+                    var intrinsicSizeVC = self.rootViewController
+                    
+                    if let navVC = intrinsicSizeVC as? UINavigationController, let viewController = navVC.viewControllers.first {
+                        intrinsicSizeVC = viewController
+                    }
+                    
+                    if #available(iOS 11.0, *) {
+                        self.pullUpDistance = intrinsicSizeVC.view.systemLayoutSizeFitting(UIView.layoutFittingCompressedSize).height + intrinsicSizeVC.view.safeAreaInsets.top + intrinsicSizeVC.view.safeAreaInsets.bottom
+                    } else {
+                        self.pullUpDistance = intrinsicSizeVC.view.systemLayoutSizeFitting(UIView.layoutFittingCompressedSize).height
+                    }
+                }else{
+                    self.pullUpDistance = self.viewController.view.bounds.height / 2
+                }
             }
             
             NotificationCenter.default.addObserver(self, selector: #selector(self.keyboardOpened(_:)), name: UIResponder.keyboardWillShowNotification, object: nil)
@@ -355,7 +362,7 @@ public class FLPullUpViewController {
         
         self.pullUpDistance = 0
         
-        UIView.animate(withDuration: containerPullAnimation, animations: { () -> Void in
+        UIView.animate(withDuration: containerPullAnimation, animations: { in
             
             self.viewController.darkScreenView.hide = true
             
