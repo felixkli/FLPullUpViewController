@@ -362,7 +362,7 @@ public class FLPullUpViewController {
         
         self.pullUpDistance = 0
         
-        UIView.animate(withDuration: containerPullAnimation, animations: { in
+        UIView.animate(withDuration: containerPullAnimation, animations: { () -> Void in
             
             self.viewController.darkScreenView.hide = true
             
