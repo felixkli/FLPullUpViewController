@@ -26,7 +26,7 @@ private class ContainerVC: UIViewController {
     public let containerView = UIView()
     public let blurEffectView = UIVisualEffectView(effect: UIBlurEffect(style: .extraLight))
     
-    public var compressViewForLargeScreens = false
+    public var compressViewForLargeScreens = true
     public var maxWidthForCompressedView: CGFloat = 700
     
     public var rootViewController = UIViewController()
