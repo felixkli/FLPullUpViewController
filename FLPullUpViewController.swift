@@ -301,6 +301,10 @@ public class FLPullUpViewController {
         self.rootViewController = rootViewController
     }
     
+    public func resetOriginalPullDistance() {
+        self.originalPullDistance = nil
+    }
+    
     // MARK: Present pullUpVC
     //  .presentViewController does not check for UINavigationController, UIPageViewController cases
     public func show(_ completion: (() -> Void)? = nil){
