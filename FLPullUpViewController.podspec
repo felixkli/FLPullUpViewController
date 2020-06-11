@@ -1,7 +1,7 @@
 Pod::Spec.new do |s|
 
   s.name         = "FLPullUpViewController"
-  s.version      = "0.5.10"
+  s.version      = "0.5.11"
   s.summary      = "A pull up controller that appears from the bottom."
   s.homepage     = "https://github.com/felixkli/FLPullUpViewController"
   s.license      = 'MIT'
