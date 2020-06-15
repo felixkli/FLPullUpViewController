@@ -25,13 +25,13 @@ public extension PullUpDelegate {
 private let staticPullBarHeight: CGFloat = 20
 private let containerPullAnimation: TimeInterval = 0.3
 
-
-
 private class ContainerVC: UIViewController {
     
     public let darkScreenView = DarkScreenView()
     public let containerView = UIView()
     public let blurEffectView = UIVisualEffectView(effect: UIBlurEffect(style: .extraLight))
+    
+    public var addCornerRadius = true
     
     public var compressViewForLargeScreens = true
     public var maxWidthForCompressedView: CGFloat = 700
@@ -52,6 +52,12 @@ private class ContainerVC: UIViewController {
 
 
     // MARK: Life Cycle
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
+    }
+    
     override public func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         
@@ -59,8 +65,6 @@ private class ContainerVC: UIViewController {
             
             self.darkScreenView.hide = false
         }
-        
-        
     }
     
     override public func viewDidLayoutSubviews() {
@@ -110,7 +114,7 @@ private class ContainerVC: UIViewController {
             if self.showPullUpBar {
                 
                 self.pullTabImageView.frame = CGRect(x: (self.containerView.bounds.width - self.pullTabImageView.bounds.width) / 2,
-                                                     y: (staticPullBarHeight - self.pullTabImageView.bounds.height) / 2 + 5,
+                                                     y: (staticPullBarHeight - self.pullTabImageView.bounds.height) / 2,
                                                      width: self.pullTabImageView.bounds.width,
                                                      height: self.pullTabImageView.bounds.height)
                 
@@ -121,6 +125,12 @@ private class ContainerVC: UIViewController {
             
             self.blurEffectView.frame = self.containerView.bounds
             self.darkScreenView.backgroundColor = UIColor.clear
+            
+            if self.addCornerRadius {
+                self.containerView.layer.roundCorners(corners: [.topLeft, .topRight], radius: 8)
+            }else{
+                self.containerView.layer.roundCorners(corners: [.topLeft, .topRight], radius: 0)
+            }
         }
     }
    
@@ -180,6 +190,11 @@ public class FLPullUpViewController {
         set { self.viewController.maxWidthForCompressedView = newValue }
     }
     
+    public var addCornerRadius: Bool {
+        get { self.viewController.addCornerRadius }
+        set { self.viewController.addCornerRadius = newValue }
+    }
+    
     public var setBlackBorder: Bool = false {
         didSet{
             if setBlackBorder {
@@ -202,7 +217,12 @@ public class FLPullUpViewController {
         get {
             if keyboardExpanded {
                 let pullBarHeight = (self.showPullUpBar) ? staticPullBarHeight : 0
-                return self.viewController.view.bounds.height - pullBarHeight
+                if #available(iOS 11.0, *) {
+                    return self.viewController.view.bounds.height - pullBarHeight - self.viewController.view.safeAreaInsets.top
+                } else {
+                    return self.viewController.view.bounds.height - pullBarHeight
+                }
+                
             }else{
                 return self.viewController.originalPullDistance
             }
@@ -556,4 +576,16 @@ fileprivate extension UIViewController {
 extension UIImage {
     
     static let dragIndicatorIcon = UIImage(named: "drag-indicator-icon", in: Bundle(for: FLPullUpViewController.self), compatibleWith: nil)
+}
+
+fileprivate extension CALayer {
+  func roundCorners(corners: UIRectCorner, radius: CGFloat) {
+    let maskPath = UIBezierPath(roundedRect: bounds,
+                                byRoundingCorners: corners,
+                                cornerRadii: CGSize(width: radius, height: radius))
+
+    let shape = CAShapeLayer()
+    shape.path = maskPath.cgPath
+    mask = shape
+  }
 }
