@@ -31,7 +31,7 @@ private class ContainerVC: UIViewController {
     public let containerView = UIView()
     public let blurEffectView = UIVisualEffectView(effect: UIBlurEffect(style: .extraLight))
     
-    public var addCornerRadius = true
+    public var addCornerRadius = false
     
     public var compressViewForLargeScreens = true
     public var maxWidthForCompressedView: CGFloat = 700
@@ -53,11 +53,6 @@ private class ContainerVC: UIViewController {
 
     // MARK: Life Cycle
     
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        
-    }
-    
     override public func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         
@@ -73,7 +68,7 @@ private class ContainerVC: UIViewController {
         var containerX: CGFloat = 0
         var containerWidth: CGFloat = view.bounds.width
         
-        if compressViewForLargeScreens{
+        if compressViewForLargeScreens {
             containerWidth =  min(view.bounds.width, maxWidthForCompressedView)
             containerX = (view.bounds.width - containerWidth) / 2
         }
@@ -90,7 +85,7 @@ private class ContainerVC: UIViewController {
             self.containerView.frame = CGRect(x: containerX, y: view.bounds.height, width: containerWidth, height: view.bounds.height)
             self.darkScreenView.updateFrame()
         }
-        
+                
         UIView.animate(withDuration: containerPullAnimation, delay: 0, options: .beginFromCurrentState, animations: {
             
             self.containerView.frame.origin = CGPoint(x: containerX, y: self.view.frame.height - self.pullUpDistance)
@@ -126,10 +121,15 @@ private class ContainerVC: UIViewController {
             self.blurEffectView.frame = self.containerView.bounds
             self.darkScreenView.backgroundColor = UIColor.clear
             
-            if self.addCornerRadius {
-                self.containerView.layer.roundCorners(corners: [.topLeft, .topRight], radius: 8)
-            }else{
-                self.containerView.layer.roundCorners(corners: [.topLeft, .topRight], radius: 0)
+            if #available(iOS 11.0, *) {
+                
+                if self.addCornerRadius {
+                    self.containerView.layer.masksToBounds = true
+                    self.containerView.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
+                    self.containerView.layer.cornerRadius = 8
+                }else{
+                    self.containerView.layer.cornerRadius = 0
+                }
             }
         }
     }
@@ -190,6 +190,7 @@ public class FLPullUpViewController {
         set { self.viewController.maxWidthForCompressedView = newValue }
     }
     
+    @available(iOS 11.0, *)
     public var addCornerRadius: Bool {
         get { self.viewController.addCornerRadius }
         set { self.viewController.addCornerRadius = newValue }
@@ -576,16 +577,4 @@ fileprivate extension UIViewController {
 extension UIImage {
     
     static let dragIndicatorIcon = UIImage(named: "drag-indicator-icon", in: Bundle(for: FLPullUpViewController.self), compatibleWith: nil)
-}
-
-fileprivate extension CALayer {
-  func roundCorners(corners: UIRectCorner, radius: CGFloat) {
-    let maskPath = UIBezierPath(roundedRect: bounds,
-                                byRoundingCorners: corners,
-                                cornerRadii: CGSize(width: radius, height: radius))
-
-    let shape = CAShapeLayer()
-    shape.path = maskPath.cgPath
-    mask = shape
-  }
 }
