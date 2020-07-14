@@ -73,9 +73,13 @@ private class ContainerVC: UIViewController {
             containerX = (view.bounds.width - containerWidth) / 2
         }
         
+        let pullBarHeight = (self.showPullUpBar)
+            ? staticPullBarHeight
+            : 0
+        
         if let navVC = rootViewController as? UINavigationController {
             
-            navVC.navigationBar.frame = CGRect(x: navVC.navigationBar.frame.origin.x, y: 0, width: navVC.navigationBar.frame.width, height: 44)
+            navVC.navigationBar.frame = CGRect(x: navVC.navigationBar.frame.origin.x, y: pullBarHeight, width: navVC.navigationBar.frame.width, height: 44)
         }
         
         self.darkScreenView.frame = view.bounds
@@ -91,9 +95,6 @@ private class ContainerVC: UIViewController {
             self.containerView.frame.origin = CGPoint(x: containerX, y: self.view.frame.height - self.pullUpDistance)
             self.containerView.frame.size = CGSize(width: containerWidth, height: max(self.pullUpDistance, (self.originalPullDistance ?? 0)))
             
-            let pullBarHeight = (self.showPullUpBar)
-                ? staticPullBarHeight
-                : 0
             
             if #available(iOS 11.0, *) {
                 self.rootViewController.additionalSafeAreaInsets = UIEdgeInsets(top: pullBarHeight, left: 0, bottom: 0, right: 0)
@@ -101,7 +102,7 @@ private class ContainerVC: UIViewController {
                         
             // Setting rootViewController as frame
             self.rootViewController.view.frame = CGRect(x: 0, y: 0, width: self.containerView.bounds.width, height: self.containerView.frame.height)
- 
+            
             self.darkScreenView.updateFrame()
             
         }) { complete in
