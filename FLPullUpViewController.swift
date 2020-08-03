@@ -11,15 +11,12 @@ import Foundation
 public protocol PullUpDelegate: class {
     
     func pullUpVC(pullUpViewController: FLPullUpViewController, didCloseWith rootViewController:UIViewController)
-//    func pullUpVC(pullUpViewController: FLPullUpViewController, didMoveToViewController viewController: UIViewController)
-    
 }
 
 // OPTIONAL
 public extension PullUpDelegate {
     
     func pullUpVC(pullUpViewController: FLPullUpViewController, didCloseWith rootViewController:UIViewController) { }
-//    func pullUpVC(pullUpViewController: FLPullUpViewController, didMoveToViewController viewController: UIViewController) { }
 }
 
 private let staticPullBarHeight: CGFloat = 20
@@ -219,6 +216,7 @@ public class FLPullUpViewController {
             if keyboardExpanded {
                 let pullBarHeight = (self.showPullUpBar) ? staticPullBarHeight : 0
                 if #available(iOS 11.0, *) {
+                    
                     return self.viewController.view.bounds.height - pullBarHeight - self.viewController.view.safeAreaInsets.top
                 } else {
                     return self.viewController.view.bounds.height - pullBarHeight
@@ -234,27 +232,32 @@ public class FLPullUpViewController {
     public var pullUpDistance: CGFloat {
         get { self.viewController.pullUpDistance }
         set {
-            if newValue == Self.layoutSizeFitting {
+            var newDistance = newValue
+            
+             if newValue == Self.layoutSizeFitting {
                 
                 var intrinsicSizeVC = self.rootViewController
                 
-                if let navVC = intrinsicSizeVC as? UINavigationController, let viewController = navVC.viewControllers.first {
+                if let navVC = intrinsicSizeVC as? UINavigationController,
+                    let viewController = navVC.visibleViewController {
                     intrinsicSizeVC = viewController
                 }
                 
                 if #available(iOS 11.0, *) {
+                    
+                    intrinsicSizeVC.view.invalidateIntrinsicContentSize() // invalidate before layout
+                    intrinsicSizeVC.view.setNeedsLayout()
+
                     let pullBarHeight = (self.showPullUpBar) ? staticPullBarHeight : 0
 
-                    self.pullUpDistance = intrinsicSizeVC.view.systemLayoutSizeFitting(UIView.layoutFittingCompressedSize).height + pullBarHeight
-//                        + intrinsicSizeVC.view.safeAreaInsets.top + intrinsicSizeVC.view.safeAreaInsets.bottom
+                    newDistance = intrinsicSizeVC.view.systemLayoutSizeFitting(UIView.layoutFittingCompressedSize).height + pullBarHeight
+                    
                 } else {
-                    self.pullUpDistance = intrinsicSizeVC.view.systemLayoutSizeFitting(UIView.layoutFittingCompressedSize).height
+                    newDistance = intrinsicSizeVC.view.systemLayoutSizeFitting(UIView.layoutFittingCompressedSize).height
                 }
-            
-                return
             }
             
-            self.viewController.pullUpDistance = newValue
+            self.viewController.pullUpDistance = newDistance
             if originalPullDistance == nil {
                 self.originalPullDistance = self.pullUpDistance
             }
@@ -370,6 +373,12 @@ public class FLPullUpViewController {
     
     public func resetOriginalPullDistance() {
         self.originalPullDistance = nil
+        
+        if self.useSystemLayoutSizeFitting, !keyboardExpanded {
+            
+            self.pullUpDistance = Self.layoutSizeFitting
+            self.viewController.view.layoutIfNeeded()
+        }
     }
     
     // MARK: Present pullUpVC
@@ -518,19 +527,7 @@ public class FLPullUpViewController {
             }
         }
     }
-    
-    deinit {
-//        NotificationCenter.default.removeObserver(self)
-    }
 }
-//
-//extension FLPullUpViewController: UINavigationControllerDelegate {
-//
-//    public func navigationController(_ navigationController: UINavigationController, didShow viewController: UIViewController, animated: Bool) {
-//
-//        self.delegate?.pullUpVC(pullUpViewController: self, didMoveToViewController: viewController)
-//    }
-//}
 
 fileprivate extension UIViewController {
     
