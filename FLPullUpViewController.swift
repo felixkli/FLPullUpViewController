@@ -255,6 +255,9 @@ public class FLPullUpViewController {
                 } else {
                     newDistance = intrinsicSizeVC.view.systemLayoutSizeFitting(UIView.layoutFittingCompressedSize).height
                 }
+                
+                // Need to call again in order to set view size to update correctly when pull distance has not changed
+                intrinsicSizeVC.view.systemLayoutSizeFitting(UIView.layoutFittingCompressedSize)
             }
             
             self.viewController.pullUpDistance = newDistance
