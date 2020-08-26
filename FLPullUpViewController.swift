@@ -219,6 +219,7 @@ public class FLPullUpViewController {
         }
     }
     
+    
     private var blurBackground = false {
         didSet{
             updateContainer()
