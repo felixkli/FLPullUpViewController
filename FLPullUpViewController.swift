@@ -28,6 +28,8 @@ private class ContainerVC: UIViewController {
     public let containerView = UIView()
     public let blurEffectView = UIVisualEffectView(effect: UIBlurEffect(style: .extraLight))
     
+    public let pullTabContainerView = UIView()
+    
     public var addCornerRadius = false
     
     public var compressViewForLargeScreens = true
@@ -77,16 +79,39 @@ private class ContainerVC: UIViewController {
         if let navVC = rootViewController as? UINavigationController {
             
             navVC.navigationBar.frame = CGRect(x: navVC.navigationBar.frame.origin.x, y: pullBarHeight, width: navVC.navigationBar.frame.width, height: 44)
+            
+            navVC.topViewController?.edgesForExtendedLayout = [.top, .bottom]
         }
         
         self.darkScreenView.frame = view.bounds
+        
+        self.pullTabContainerView.frame = CGRect(x: containerX, y: -20, width: containerWidth, height: pullBarHeight)
         
         if self.containerView.frame == CGRect.zero {
             
             self.containerView.frame = CGRect(x: containerX, y: view.bounds.height, width: containerWidth, height: view.bounds.height)
             self.darkScreenView.updateFrame()
         }
+        
+        if self.showPullUpBar {
+            
+            self.pullTabImageView.frame = CGRect(x: (containerWidth - self.pullTabImageView.bounds.width) / 2,
+                                                 y: (staticPullBarHeight - self.pullTabImageView.bounds.height) / 2,
+                                                 width: self.pullTabImageView.bounds.width,
+                                                 height: self.pullTabImageView.bounds.height)
+            
+            if let navVC = self.rootViewController as? UINavigationController {
                 
+                navVC.navigationBar.addSubview(self.pullTabContainerView)
+            }
+//            self.containerView.addSubview(self.pullTabContainerView)
+            
+            self.containerView.addSubview(self.pullTabImageView)
+        }else{
+            self.pullTabImageView.removeFromSuperview()
+            self.pullTabContainerView.removeFromSuperview()
+        }
+        
         UIView.animate(withDuration: containerPullAnimation, delay: 0, options: .beginFromCurrentState, animations: {
             
             self.containerView.frame.origin = CGPoint(x: containerX, y: self.view.frame.height - self.pullUpDistance)
@@ -103,17 +128,6 @@ private class ContainerVC: UIViewController {
             
         }) { complete in
             
-            if self.showPullUpBar {
-                
-                self.pullTabImageView.frame = CGRect(x: (self.containerView.bounds.width - self.pullTabImageView.bounds.width) / 2,
-                                                     y: (staticPullBarHeight - self.pullTabImageView.bounds.height) / 2,
-                                                     width: self.pullTabImageView.bounds.width,
-                                                     height: self.pullTabImageView.bounds.height)
-                
-                self.containerView.addSubview(self.pullTabImageView)
-            }else{
-                self.pullTabImageView.removeFromSuperview()
-            }
             
             self.blurEffectView.frame = self.containerView.bounds
             self.darkScreenView.backgroundColor = UIColor.clear
@@ -213,24 +227,28 @@ public class FLPullUpViewController {
     
     private var originalPullDistance: CGFloat? {
         get {
+            var distance: CGFloat?
             if keyboardExpanded {
                 let pullBarHeight = (self.showPullUpBar) ? staticPullBarHeight : 0
                 if #available(iOS 11.0, *) {
-                    
-                    return self.viewController.view.bounds.height - pullBarHeight - self.viewController.view.safeAreaInsets.top
+                    distance = self.viewController.view.bounds.height - pullBarHeight - self.viewController.view.safeAreaInsets.top
                 } else {
-                    return self.viewController.view.bounds.height - pullBarHeight
+                    distance = self.viewController.view.bounds.height - pullBarHeight
                 }
-                
-            }else{
-                return self.viewController.originalPullDistance
+            } else {
+
+             distance = self.viewController.originalPullDistance
             }
+            
+            return distance
         }
         set { self.viewController.originalPullDistance = newValue }
     }
 
     public var pullUpDistance: CGFloat {
-        get { self.viewController.pullUpDistance }
+        get {
+            
+            return self.viewController.pullUpDistance }
         set {
             var newDistance = newValue
             
@@ -251,7 +269,7 @@ public class FLPullUpViewController {
                     let pullBarHeight = (self.showPullUpBar) ? staticPullBarHeight : 0
 
                     newDistance = intrinsicSizeVC.view.systemLayoutSizeFitting(UIView.layoutFittingCompressedSize).height + pullBarHeight
-                    
+
                 } else {
                     newDistance = intrinsicSizeVC.view.systemLayoutSizeFitting(UIView.layoutFittingCompressedSize).height
                 }
@@ -262,6 +280,7 @@ public class FLPullUpViewController {
             
             self.viewController.pullUpDistance = newDistance
             if originalPullDistance == nil {
+                
                 self.originalPullDistance = self.pullUpDistance
             }
             viewController.view.setNeedsLayout()
@@ -313,7 +332,13 @@ public class FLPullUpViewController {
             self.viewController.containerView.addSubview(viewController.blurEffectView)
             self.viewController.addChild(child: rootViewController, to: viewController.blurEffectView)
         }else{
-            self.viewController.containerView.backgroundColor = UIColor.clear
+            
+            if let navVC = rootViewController as? UINavigationController {
+                self.viewController.pullTabContainerView.backgroundColor = navVC.navigationBar.backgroundColor
+            }else{
+                self.viewController.pullTabContainerView.backgroundColor = UIColor.clear
+            }
+            
             self.viewController.addChild(child: rootViewController, to: self.viewController.containerView)
         }
     }
@@ -329,8 +354,16 @@ public class FLPullUpViewController {
             
             navVC.navigationBar.setBackgroundImage(UIImage(), for: .default)
             
-            navVC.navigationBar.backgroundColor = UIColor.clear
-            navVC.view.backgroundColor = UIColor.clear
+            if let navVC = rootViewController as? UINavigationController {
+                self.viewController.pullTabContainerView.backgroundColor = navVC.navigationBar.backgroundColor
+            }else{
+                self.viewController.pullTabContainerView.backgroundColor = UIColor.clear
+            }
+
+//            navVC.navigationBar.backgroundColor = UIColor.clear
+//            navVC.view.backgroundColor = UIColor.clear
+            
+//            viewController.view.backgroundColor = navVC.navigationBar.backgroundColor
         }
         
         updateContainer()
@@ -374,11 +407,18 @@ public class FLPullUpViewController {
         self.rootViewController = rootViewController
     }
     
-    public func resetOriginalPullDistance() {
+    public func resetOriginalPullDistance(newDistance: CGFloat? = nil) {
         self.originalPullDistance = nil
         
-        if self.useSystemLayoutSizeFitting, !keyboardExpanded {
+        if let newDistance = newDistance {
+
+            self.viewController.view.layoutIfNeeded()
+            self.pullUpDistance = newDistance
+            self.viewController.view.layoutIfNeeded()
+
+        } else if self.useSystemLayoutSizeFitting, !keyboardExpanded {
             
+            self.viewController.view.layoutIfNeeded()
             self.pullUpDistance = Self.layoutSizeFitting
             self.viewController.view.layoutIfNeeded()
         }
@@ -499,35 +539,29 @@ public class FLPullUpViewController {
     }
     
     @objc private func keyboardOpened(_ notification: Notification) {
-  
-        DispatchQueue.main.async {
+        
+        guard
+            self.expandWithKeyboard,
+            !self.keyboardExpanded
             
-            guard
-                self.expandWithKeyboard,
-                !self.keyboardExpanded
-                
-                else { return
-            }
-            
-            self.keyboardExpanded = true
-          
-            if let originalPullDistance = self.originalPullDistance {
-                self.pullUpDistance = originalPullDistance
-            }
+            else { return
+        }
+        
+        self.keyboardExpanded = true
+        
+        if let originalPullDistance = self.originalPullDistance {
+            self.pullUpDistance = originalPullDistance
         }
     }
     
     @objc private func keyboardClosed(_ notification: Notification) {
-                
-        DispatchQueue.main.async {
+        
+        self.keyboardExpanded = false
+        
+        if self.expandWithKeyboard,
+            let originalPullDistance = self.originalPullDistance {
             
-            self.keyboardExpanded = false
-            
-            if self.expandWithKeyboard,
-                let originalPullDistance = self.originalPullDistance {
-                
-                self.pullUpDistance = originalPullDistance
-            }
+            self.pullUpDistance = originalPullDistance
         }
     }
 }
