@@ -51,7 +51,7 @@ private class ContainerVC: UIViewController {
 
 
     // MARK: Life Cycle
-    
+        
     override public func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         
@@ -78,18 +78,17 @@ private class ContainerVC: UIViewController {
         
         if let navVC = rootViewController as? UINavigationController {
             
-            navVC.navigationBar.frame = CGRect(x: navVC.navigationBar.frame.origin.x, y: pullBarHeight, width: navVC.navigationBar.frame.width, height: 44)
-            
+            navVC.navigationBar.frame = CGRect(x: navVC.navigationBar.frame.origin.x, y: pullBarHeight, width: containerWidth, height: 44)
             navVC.topViewController?.edgesForExtendedLayout = [.top, .bottom]
         }
         
         self.darkScreenView.frame = view.bounds
-        
         self.pullTabContainerView.frame = CGRect(x: containerX, y: -20, width: containerWidth, height: pullBarHeight)
         
-        if self.containerView.frame == CGRect.zero {
+        if self.containerView.frame == CGRect.zero  {
             
             self.containerView.frame = CGRect(x: containerX, y: view.bounds.height, width: containerWidth, height: view.bounds.height)
+            self.rootViewController.view.frame = self.containerView.bounds
             self.darkScreenView.updateFrame()
         }
         
@@ -104,7 +103,7 @@ private class ContainerVC: UIViewController {
                 
                 navVC.navigationBar.addSubview(self.pullTabContainerView)
             }
-//            self.containerView.addSubview(self.pullTabContainerView)
+            //            self.containerView.addSubview(self.pullTabContainerView)
             
             self.containerView.addSubview(self.pullTabImageView)
         }else{
@@ -116,14 +115,14 @@ private class ContainerVC: UIViewController {
             
             self.containerView.frame.origin = CGPoint(x: containerX, y: self.view.frame.height - self.pullUpDistance)
             self.containerView.frame.size = CGSize(width: containerWidth, height: max(self.pullUpDistance, (self.originalPullDistance ?? 0)))
-                        
+            
             if #available(iOS 11.0, *) {
                 self.rootViewController.additionalSafeAreaInsets = UIEdgeInsets(top: pullBarHeight, left: 0, bottom: 0, right: 0)
             }
-                        
+            
             // Setting rootViewController as frame
             self.rootViewController.view.frame = CGRect(x: 0, y: 0, width: self.containerView.bounds.width, height: self.containerView.frame.height)
- 
+            
             self.darkScreenView.updateFrame()
             
         }) { complete in
@@ -144,7 +143,7 @@ private class ContainerVC: UIViewController {
             }
         }
     }
-   
+    
     public override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
         super.viewWillTransition(to: size, with: coordinator)
         
@@ -282,6 +281,7 @@ public class FLPullUpViewController {
             self.viewController.pullUpDistance = newDistance
             if originalPullDistance == nil {
                 
+                print("[pull] set originalPullDistance: \(self.pullUpDistance)")
                 self.originalPullDistance = self.pullUpDistance
             }
             viewController.view.setNeedsLayout()
@@ -339,7 +339,6 @@ public class FLPullUpViewController {
             }else{
                 self.viewController.pullTabContainerView.backgroundColor = UIColor.clear
             }
-            
             self.viewController.addChild(child: rootViewController, to: self.viewController.containerView)
         }
     }
@@ -360,11 +359,6 @@ public class FLPullUpViewController {
             }else{
                 self.viewController.pullTabContainerView.backgroundColor = UIColor.clear
             }
-
-//            navVC.navigationBar.backgroundColor = UIColor.clear
-//            navVC.view.backgroundColor = UIColor.clear
-            
-//            viewController.view.backgroundColor = navVC.navigationBar.backgroundColor
         }
         
         updateContainer()
@@ -519,7 +513,7 @@ public class FLPullUpViewController {
             if pullUpDistance > max(originalPullDistance ?? 0, screenRatio * viewController.view.bounds.height) {
                 pullUpDistance = max(originalPullDistance ?? 0, screenRatio * viewController.view.bounds.height)
             }
-            
+                        
         case .ended, .cancelled, .failed, .possible:
             
             UIView.setAnimationsEnabled(true)
