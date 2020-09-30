@@ -626,3 +626,4 @@ extension UIImage {
     
     static let dragIndicatorIcon = UIImage(named: "drag-indicator-icon", in: Bundle(for: FLPullUpViewController.self), compatibleWith: nil)
 }
+
