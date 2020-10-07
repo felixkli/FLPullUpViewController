@@ -70,6 +70,7 @@ private class ContainerVC: UIViewController {
         
         var containerX: CGFloat = 0
         var containerWidth: CGFloat = view.bounds.width
+        let containerHeight = max(self.pullUpDistance, (self.originalPullDistance ?? 0))
         
         if compressViewForLargeScreens {
             containerWidth =  min(view.bounds.width, maxWidthForCompressedView)
@@ -111,18 +112,20 @@ private class ContainerVC: UIViewController {
             self.pullTabContainerView.removeFromSuperview()
         }
         
+        DispatchQueue.main.async {
+            // Setting rootViewController as frame
+            self.rootViewController.view.frame = CGRect(x: 0, y: 0, width: self.containerView.bounds.width, height: containerHeight)
+        }
+        
         UIView.animate(withDuration: containerPullAnimation, delay: 0, options: .beginFromCurrentState, animations: {
             
             self.containerView.frame.origin = CGPoint(x: containerX, y: self.view.frame.height - self.pullUpDistance)
-            self.containerView.frame.size = CGSize(width: containerWidth, height: max(self.pullUpDistance, (self.originalPullDistance ?? 0)))
+            self.containerView.frame.size = CGSize(width: containerWidth, height: containerHeight)
                         
             if #available(iOS 11.0, *) {
                 self.rootViewController.additionalSafeAreaInsets = UIEdgeInsets(top: pullBarHeight, left: 0, bottom: 0, right: 0)
             }
                         
-            // Setting rootViewController as frame
-            self.rootViewController.view.frame = CGRect(x: 0, y: 0, width: self.containerView.bounds.width, height: self.containerView.frame.height)
- 
             self.darkScreenView.updateFrame()
             
         }) { complete in
