@@ -276,18 +276,21 @@ public class FLPullUpViewController {
                     
                     intrinsicSizeVC.view.invalidateIntrinsicContentSize() // invalidate before layout
                     intrinsicSizeVC.view.setNeedsLayout()
+                    intrinsicSizeVC.view.layoutIfNeeded()
 
                     let pullBarHeight = (self.showPullUpBar) ? staticPullBarHeight : 0
 
                     newDistance = intrinsicSizeVC.view.systemLayoutSizeFitting(UIView.layoutFittingCompressedSize).height + pullBarHeight
-
+                        
                 } else {
                     newDistance = intrinsicSizeVC.view.systemLayoutSizeFitting(UIView.layoutFittingCompressedSize).height
                 }
                 
                 // Need to call again in order to set view size to update correctly when pull distance has not changed
-                intrinsicSizeVC.view.systemLayoutSizeFitting(UIView.layoutFittingCompressedSize)
+                intrinsicSizeVC.view.systemLayoutSizeFitting(UIView .layoutFittingCompressedSize)
             }
+            
+            print("[AccountOptionsVC] pull distance: \(newDistance)")
                 
             self.viewController.pullUpDistance = min(self.viewController.view.bounds.height - 40, newDistance)
             if originalPullDistance == nil {
