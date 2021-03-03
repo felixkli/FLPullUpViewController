@@ -287,10 +287,8 @@ public class FLPullUpViewController {
                 }
                 
                 // Need to call again in order to set view size to update correctly when pull distance has not changed
-                intrinsicSizeVC.view.systemLayoutSizeFitting(UIView .layoutFittingCompressedSize)
+                intrinsicSizeVC.view.systemLayoutSizeFitting(UIView.layoutFittingCompressedSize)
             }
-            
-            print("[AccountOptionsVC] pull distance: \(newDistance)")
                 
             self.viewController.pullUpDistance = min(self.viewController.view.bounds.height - 40, newDistance)
             if originalPullDistance == nil {
@@ -366,7 +364,7 @@ public class FLPullUpViewController {
             
             displayingVC.automaticallyAdjustsScrollViewInsets = false
             
-            navVC.navigationBar.setBackgroundImage(UIImage(), for: .default)
+//            navVC.navigationBar.setBackgroundImage(UIImage(), for: .default)
             
             if let navVC = rootViewController as? UINavigationController {
                 self.viewController.pullTabContainerView.backgroundColor = navVC.navigationBar.backgroundColor
