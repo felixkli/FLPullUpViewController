@@ -8,15 +8,17 @@
 
 import Foundation
 
-public protocol PullUpDelegate: class {
+public protocol PullUpDelegate: AnyObject {
     
-    func pullUpVC(pullUpViewController: FLPullUpViewController, didCloseWith rootViewController:UIViewController)
+    func pullUpVC(pullUpViewController: PullUpViewController, willCloseWith rootViewController:UIViewController)
+    func pullUpVC(pullUpViewController: PullUpViewController, didCloseWith rootViewController:UIViewController)
 }
 
 // OPTIONAL
 public extension PullUpDelegate {
     
-    func pullUpVC(pullUpViewController: FLPullUpViewController, didCloseWith rootViewController:UIViewController) { }
+    func pullUpVC(pullUpViewController: PullUpViewController, willCloseWith rootViewController:UIViewController) { }
+    func pullUpVC(pullUpViewController: PullUpViewController, didCloseWith rootViewController:UIViewController) { }
 }
 
 private let staticPullBarHeight: CGFloat = 20
@@ -154,7 +156,7 @@ private class ContainerVC: UIViewController {
     }
 }
 
-public class FLPullUpViewController {
+public class PullUpViewController {
     
     public static let layoutSizeFitting: CGFloat = -1
     
@@ -342,7 +344,7 @@ public class FLPullUpViewController {
         if blurBackground{
             self.viewController.containerView.backgroundColor = UIColor.clear
             self.viewController.containerView.addSubview(viewController.blurEffectView)
-            self.viewController.addChild(child: rootViewController, to: viewController.blurEffectView)
+            self.viewController.addChild(child: rootViewController, to: viewController.blurEffectView, boundByConstraint: true)
         }else{
             
             if let navVC = rootViewController as? UINavigationController {
@@ -351,7 +353,7 @@ public class FLPullUpViewController {
                 self.viewController.pullTabContainerView.backgroundColor = UIColor.clear
             }
             
-            self.viewController.addChild(child: rootViewController, to: self.viewController.containerView)
+            self.viewController.addChild(child: rootViewController, to: self.viewController.containerView, boundByConstraint: true)
         }
     }
     
@@ -484,11 +486,17 @@ public class FLPullUpViewController {
         }
     }
     
-    public func dismiss(completion: (() -> Void)? = nil){
+    public func dismiss(completion: (() -> Void)? = nil) {
         
         UIView.setAnimationsEnabled(true)
         
         self.pullUpDistance = 0
+        
+        if let delegate = self.delegate{
+            
+            delegate.pullUpVC(pullUpViewController: self, willCloseWith: self.rootViewController)
+        }
+
         
         UIView.animate(withDuration: containerPullAnimation, animations: { () -> Void in
             
@@ -628,6 +636,6 @@ fileprivate extension UIViewController {
 
 extension UIImage {
     
-    static let dragIndicatorIcon = UIImage(named: "drag-indicator-icon", in: Bundle(for: FLPullUpViewController.self), compatibleWith: nil)
+    static let dragIndicatorIcon = UIImage(named: "drag-indicator-icon", in: Bundle(for: PullUpViewController.self), compatibleWith: nil)
 }
 
