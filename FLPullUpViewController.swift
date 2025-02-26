@@ -377,7 +377,7 @@ public class PullUpViewController {
         if let navVC = rootViewController as? UINavigationController,
             let displayingVC = navVC.viewControllers.first {
             
-            displayingVC.automaticallyAdjustsScrollViewInsets = false
+//            displayingVC.automaticallyAdjustsScrollViewInsets = false
             
 //            navVC.navigationBar.setBackgroundImage(UIImage(), for: .default)
             
