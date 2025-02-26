@@ -376,21 +376,12 @@ public class PullUpViewController {
         
         if let navVC = rootViewController as? UINavigationController,
             let displayingVC = navVC.viewControllers.first {
-            
-//            displayingVC.automaticallyAdjustsScrollViewInsets = false
-            
-//            navVC.navigationBar.setBackgroundImage(UIImage(), for: .default)
-            
+                        
             if let navVC = rootViewController as? UINavigationController {
                 self.viewController.pullTabContainerView.backgroundColor = navVC.navigationBar.backgroundColor
             }else{
                 self.viewController.pullTabContainerView.backgroundColor = UIColor.clear
             }
-
-//            navVC.navigationBar.backgroundColor = UIColor.clear
-//            navVC.view.backgroundColor = UIColor.clear
-            
-//            viewController.view.backgroundColor = navVC.navigationBar.backgroundColor
         }
         
         updateContainer()
