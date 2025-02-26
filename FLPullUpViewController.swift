@@ -8,18 +8,18 @@
 
 import Foundation
 
-public protocol PullUpDelegate: AnyObject {
-    
-    func pullUpVC(pullUpViewController: PullUpViewController, willCloseWith rootViewController:UIViewController)
-    func pullUpVC(pullUpViewController: PullUpViewController, didCloseWith rootViewController:UIViewController)
-}
-
-// OPTIONAL
-public extension PullUpDelegate {
-    
-    func pullUpVC(pullUpViewController: PullUpViewController, willCloseWith rootViewController:UIViewController) { }
-    func pullUpVC(pullUpViewController: PullUpViewController, didCloseWith rootViewController:UIViewController) { }
-}
+//public protocol PullUpDelegate {
+//
+//    func pullUpVC(pullUpViewController: PullUpViewController, willCloseWith rootViewController:UIViewController)
+//    func pullUpVC(pullUpViewController: PullUpViewController, didCloseWith rootViewController:UIViewController)
+//}
+//
+//// OPTIONAL
+//public extension PullUpDelegate {
+//
+//    func pullUpVC(pullUpViewController: PullUpViewController, willCloseWith rootViewController:UIViewController) { }
+//    func pullUpVC(pullUpViewController: PullUpViewController, didCloseWith rootViewController:UIViewController) { }
+//}
 
 private let staticPullBarHeight: CGFloat = 20
 private let containerPullAnimation: TimeInterval = 0.3
@@ -180,7 +180,9 @@ public class PullUpViewController {
     private var keyboardExpanded: Bool = false
     
     // Delegate
-    public weak var delegate: PullUpDelegate?
+//    public var delegate: (() -> PullUpDelegate)?
+    public var willDismiss: (() -> Void)?
+    public var didDismiss: (() -> Void)?
     
     
     // flags
@@ -214,16 +216,15 @@ public class PullUpViewController {
         set { self.viewController.maxWidthForCompressedView = newValue }
     }
     
-    @available(iOS 11.0, *)
     public var addCornerRadius: Bool {
         get { self.viewController.addCornerRadius }
         set { self.viewController.addCornerRadius = newValue }
     }
     
-    public var setBlackBorder: Bool = false {
-        didSet{
-            if setBlackBorder {
-                viewController.containerView.layer.borderColor = UIColor.black.cgColor
+    public var setBorderColor: UIColor? {
+        didSet {
+            if let value = setBorderColor {
+                viewController.containerView.layer.borderColor = value.cgColor
                 viewController.containerView.layer.borderWidth = 1
             }else{
                 viewController.containerView.layer.borderColor = UIColor.black.cgColor
@@ -231,6 +232,18 @@ public class PullUpViewController {
             }
         }
     }
+    
+//    public var setBlackBorder: Bool = false {
+//        didSet{
+//            if setBlackBorder {
+//                viewController.containerView.layer.borderColor = UIColor.black.cgColor
+//                viewController.containerView.layer.borderWidth = 1
+//            }else{
+//                viewController.containerView.layer.borderColor = UIColor.black.cgColor
+//                viewController.containerView.layer.borderWidth = 0
+//            }
+//        }
+//    }
     
     private var blurBackground = false {
         didSet{
@@ -489,26 +502,12 @@ public class PullUpViewController {
     public func dismiss(completion: (() -> Void)? = nil) {
         
         UIView.setAnimationsEnabled(true)
-        
         self.pullUpDistance = 0
-        
-        if let delegate = self.delegate{
-            
-            delegate.pullUpVC(pullUpViewController: self, willCloseWith: self.rootViewController)
-        }
-
-        
+        self.willDismiss?()
         UIView.animate(withDuration: containerPullAnimation, animations: { () -> Void in
-            
             self.viewController.darkScreenView.hide = true
-            
         }) { complete in
-            
-            if let delegate = self.delegate{
-                
-                delegate.pullUpVC(pullUpViewController: self, didCloseWith: self.rootViewController)
-            }
-            
+            self.didDismiss?()
             self.originalPullDistance = nil
             self.viewController.removeChild(child: self.rootViewController)
             self.viewController.dismiss(animated: false, completion: completion)
@@ -518,7 +517,6 @@ public class PullUpViewController {
  
     
     @objc private func tapGesturePressed(gesture: UITapGestureRecognizer){
-        
         dismiss()
     }
         
